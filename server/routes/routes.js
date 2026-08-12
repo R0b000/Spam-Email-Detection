@@ -1,5 +1,4 @@
 const express = require('express');
-const axios = require('axios');
 const emailController = require('../controller/email-controller');
 
 const routes = express.Router();

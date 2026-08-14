@@ -1,29 +1,114 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { API_URI } from '../services/api';
-import { useNavigate } from 'react-router-dom';
+import Logo from '../img/logo.png';
+import '../css/auth.css';
+
+interface FloatInputProps {
+  type: string;
+  id: string;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  error?: string;
+  autoComplete?: string;
+  showToggle?: boolean;
+  passwordVisible?: boolean;
+  onToggle?: () => void;
+}
+
+/** Google-style outlined input with a floating label. */
+const FloatInput = ({
+  type,
+  id,
+  label,
+  value,
+  onChange,
+  error,
+  autoComplete,
+  showToggle,
+  passwordVisible,
+  onToggle,
+}: FloatInputProps) => {
+  const isPassword = showToggle && passwordVisible !== undefined;
+  return (
+    <div className={`gauth-input-wrap ${value ? 'filled' : ''}`}>
+      <input
+        id={id}
+        type={isPassword ? (passwordVisible ? 'text' : 'password') : type}
+        className={`gauth-input ${error ? 'error' : ''}`}
+        value={value}
+        autoComplete={autoComplete}
+        onChange={(e) => onChange(e.target.value)}
+      />
+      <label htmlFor={id} className="gauth-label">
+        {label}
+      </label>
+      {showToggle && value && (
+        <button type="button" className="gauth-password-toggle" onClick={onToggle}>
+          {passwordVisible ? 'Hide' : 'Show'}
+        </button>
+      )}
+      {error && <p className="gauth-error">{error}</p>}
+    </div>
+  );
+};
+
+const FooterBar = () => (
+  <footer className="gauth-footer" style={{ maxWidth: 1040, marginTop: 24 }}>
+    <select defaultValue="en-US" aria-label="Language">
+      <option value="en-US">English (United States)</option>
+      <option value="es">Español</option>
+      <option value="fr">Français</option>
+    </select>
+    <div className="gauth-footer-links">
+      <a href="#">Help</a>
+      <a href="#">Privacy</a>
+      <a href="#">Terms</a>
+    </div>
+  </footer>
+);
 
 const Signup: React.FC = () => {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [confirm, setConfirm] = useState('');
   const [passwordVisible, setPasswordVisible] = useState(false);
+  const [confirmVisible, setConfirmVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+
+    const email = `${username.trim()}@email.com`;
+    if (!firstName.trim() || !lastName.trim() || !username.trim()) {
+      setError('Please fill in the required fields.');
+      return;
+    }
+    if (password.length < 8) {
+      setError('Use 8 characters or more for your password.');
+      return;
+    }
+    if (password !== confirm) {
+      setError('Those passwords didn\u2019t match. Try again.');
+      return;
+    }
 
     try {
       setLoading(true);
-      setError(null);
-
-      const response = await axios.post(`${API_URI}/register`, { name, email, password });
-
+      const response = await axios.post(`${API_URI}/register`, {
+        name: `${firstName.trim()} ${lastName.trim()}`,
+        email,
+        password,
+      });
       console.log(response);
-      navigate('/Login');
+      navigate('/login');
     } catch (err) {
       console.error(err);
       setError('Registration failed. Please try again.');
@@ -33,78 +118,92 @@ const Signup: React.FC = () => {
   };
 
   return (
-    <div className="d-flex justify-content-center align-items-center bg-secondary vh-100">
-      <div className="bg-white p-3 rounded w-25">
-        <div className="d-flex justify-content-center">
-          <h2>Register</h2>
+    <div className="gauth">
+      <div className="gauth-card wide">
+        <div className="gauth-register-grid">
+          <div className="gauth-register-form">
+            <img src={Logo} alt="Email logo" className="gauth-logo" style={{ width: 60, height: 60 }} />
+            <h1 className="gauth-h1">Create your Email Account</h1>
+            <p className="gauth-sub">to continue to Email</p>
+
+            <form onSubmit={handleSubmit} noValidate>
+              <div className="gauth-row2">
+                <FloatInput type="text" id="firstName" label="First name" value={firstName} onChange={setFirstName} autoComplete="given-name" />
+                <FloatInput type="text" id="lastName" label="Last name" value={lastName} onChange={setLastName} autoComplete="family-name" />
+              </div>
+
+              {/* Username with @email.com suffix */}
+              <div className="gauth-input-wrap filled" style={{ marginTop: 16 }}>
+                <input
+                  id="username"
+                  type="text"
+                  className="gauth-input"
+                  value={username}
+                  autoComplete="off"
+                  onChange={(e) => setUsername(e.target.value.replace(/\s/g, ''))}
+                  style={{ paddingRight: 96 }}
+                />
+                <label htmlFor="username" className="gauth-label">
+                  Username
+                </label>
+                <span className="gauth-password-toggle" style={{ fontWeight: 400, color: '#5f6368' }}>
+                  @email.com
+                </span>
+              </div>
+              <p className="gauth-form-note">You can use letters, numbers &amp; periods</p>
+              <Link to="/login" className="gauth-link" style={{ marginTop: 4 }}>
+                Use my current email address instead
+              </Link>
+<hr className="gauth-rule" />
+
+              <div className="gauth-row2">
+                <FloatInput
+                  type="password"
+                  id="password"
+                  label="Password"
+                  value={password}
+                  onChange={setPassword}
+                  autoComplete="new-password"
+                  showToggle
+                  passwordVisible={passwordVisible}
+                  onToggle={() => setPasswordVisible((v) => !v)}
+                />
+                <FloatInput
+                  type="password"
+                  id="confirm"
+                  label="Confirm"
+                  value={confirm}
+                  onChange={setConfirm}
+                  autoComplete="new-password"
+                  showToggle
+                  passwordVisible={confirmVisible}
+                  onToggle={() => setConfirmVisible((v) => !v)}
+                />
+              </div>
+
+              {error && <p className="gauth-error" style={{ minHeight: 0, marginTop: 12 }}>{error}</p>}
+
+              <div className="gauth-panel-actions" style={{ marginTop: 20 }}>
+                <Link to="/login" className="gauth-btn gauth-btn-flat">
+                  Sign in instead
+                </Link>
+                <button type="submit" className="gauth-btn gauth-btn-primary" disabled={loading}>
+                  {loading ? 'Creating...' : 'Next'}
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Right illustration panel */}
+          <div className="gauth-register-aside">
+            <img src={Logo} alt="Email illustration" className="gauth-aside-art" />
+            <h3>One Email account. Everything Email.</h3>
+            <p>Your inbox, spam detection and more — all in one place.</p>
+          </div>
         </div>
-        <form onSubmit={handleSubmit}>
-          <div className="mb-3">
-            <label htmlFor="name">
-              <strong>Name</strong>
-            </label>
-            <input
-              type="text"
-              placeholder="Enter Name"
-              autoComplete="off"
-              id="name"
-              name="name"
-              className="form-control rounded-0"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-          </div>
-          <div className="mb-3">
-            <label htmlFor="email">
-              <strong>Email</strong>
-            </label>
-            <input
-              type="email"
-              placeholder="Enter Email"
-              autoComplete="off"
-              id="email"
-              name="email"
-              className="form-control rounded-0"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
-          <div className="mb-3">
-            <label htmlFor="password">
-              <strong>Password</strong>
-            </label>
-            <div className="input-group">
-              <input
-                type={passwordVisible ? 'text' : 'password'}
-                placeholder="Enter Password"
-                autoComplete="off"
-                id="password"
-                name="password"
-                className="form-control rounded-0"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-              <button
-                type="button"
-                className="btn btn-light border rounded-0"
-                onClick={() => setPasswordVisible(!passwordVisible)}
-                aria-label={passwordVisible ? 'Hide password' : 'Show password'}
-                style={{ borderTopLeftRadius: 0, borderBottomLeftRadius: 0, borderLeft: 0 }}
-              >
-                {passwordVisible ? 'Hide' : 'Show'}
-              </button>
-            </div>
-          </div>
-          <button type="submit" className="btn btn-success w-100 rounded-0" disabled={loading}>
-            {loading ? 'Registering...' : 'Register'}
-          </button>
-        </form>
-        {error && <p className="text-danger mt-2">{error}</p>}
-        <p>Already Have an Account</p>
-        <Link to="/Login" className="btn btn-default border w-100 bg-light rounded-0 text-decoration-none">
-          Login
-        </Link>
       </div>
+
+      <FooterBar />
     </div>
   );
 };

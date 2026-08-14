@@ -1,22 +1,17 @@
-import { useState, useEffect, Suspense } from 'react';
+import { useState, Suspense } from 'react';
 import Header from '../components/Header';
 import SideBar from '../components/SideBar';
 import Emails from '../components/Emails';
 import { MailOutlineOutlined } from '@mui/icons-material';
 import { Box } from '@mui/material';
-import { useNavigate, Outlet } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import SuspenseLoader from '../components/common/SuspenseLoader';
 
 const Main: React.FC = () => {
   const [openDrawer, setOpenDrawer] = useState(true);
-  const [userName, setUserName] = useState(''); // State to store the user's name
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    // Retrieve the user's name from sessionStorage
-    const storedUserName = sessionStorage.getItem('userName');
-    setUserName(storedUserName || '');
-  }, []); // Run this effect only once on component mount
+  const { user } = useAuth(); // Retrieve the user (from the DB) via AuthContext
+  const userName = user?.name ?? '';
 
   const toggleDrawer = () => {
     setOpenDrawer((prevState) => !prevState);

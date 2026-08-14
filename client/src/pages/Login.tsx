@@ -1,21 +1,25 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API_URI } from '../services/api';
-import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import SuspenseLoader from '../components/common/SuspenseLoader';
 
-interface LoginProps {
-  setIsLoggedIn?: (value: boolean) => void;
-}
-
-const Login = ({ setIsLoggedIn }: LoginProps) => {
+const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [passwordVisible, setPasswordVisible] = useState(false);
   const navigate = useNavigate();
+  const { login, isAuthenticated } = useAuth();
+
+  // If the user is already authenticated, send them straight to the inbox.
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/emails', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -31,10 +35,8 @@ const Login = ({ setIsLoggedIn }: LoginProps) => {
       if (result.data.message === 'Success') {
         const { name, email } = result.data.user;
 
-        sessionStorage.setItem('userName', name);
-        sessionStorage.setItem('userEmail', email);
-
-        setIsLoggedIn?.(true);
+        // Persist the logged-in user in the shared AuthContext.
+        login({ name, email });
         navigate('/emails');
       } else {
         console.log('Login failed:', result.data.message);

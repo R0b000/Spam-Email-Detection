@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Dialog, Button, styled } from '@mui/material';
 import axios from 'axios';
 import { API_URI } from '../services/api';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 // Define styled components
 const ProfileContainer = styled('div')({
@@ -32,14 +33,11 @@ const Profile = ({ open, onClose }: ProfileProps) => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
-  // Retrieve the user's name and email from local storage
-  const userName = sessionStorage.getItem('userName');
-  const userEmail = sessionStorage.getItem('userEmail');
-
-  useEffect(() => {
-    // You can add additional logic here if needed
-  }, []);
+  // Retrieve the user's name and email from the shared AuthContext (from the DB).
+  const userName = user?.name;
+  const userEmail = user?.email;
 
   const handleLogout = async () => {
     try {
@@ -51,8 +49,8 @@ const Profile = ({ open, onClose }: ProfileProps) => {
       console.log(result);
 
       if (result.data === 'Logout success' || result.data?.message === 'Logout success') {
-        sessionStorage.removeItem('userName');
-        sessionStorage.removeItem('userEmail');
+        // Clear the authenticated user from the shared AuthContext & session storage.
+        logout();
       } else {
         setError('Logout failed. Unexpected server response.');
       }
@@ -62,6 +60,7 @@ const Profile = ({ open, onClose }: ProfileProps) => {
     } finally {
       setLoading(false);
       onClose();
+      // Protected routes will also redirect here when the session ends.
       navigate('/login');
     }
   };

@@ -5,6 +5,7 @@ import useApi from '../hooks/useApi';
 import { API_URLS } from '../services/api.urls';
 import axios from 'axios';
 import { API_URI } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import type { Attachment } from '../types';
 
 const dialogStyle: React.CSSProperties = {
@@ -138,8 +139,10 @@ const ComposeMail = ({ openDialog, setOpenDialog }: ComposeMailProps) => {
   const saveDraftService = useApi(API_URLS.saveDraftEmails);
   const saveSpamServices = useApi(API_URLS.saveSpamEmails);
 
-  const userEmail = sessionStorage.getItem('userEmail');
-  const userName = sessionStorage.getItem('userName');
+  // Use the authenticated user from the shared AuthContext instead of sessionStorage.
+  const { user } = useAuth();
+  const userEmail = user?.email ?? null;
+  const userName = user?.name ?? null;
 
   const onValueChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, fieldName: string) => {
     if (fieldName === 'to' || fieldName === 'subject') {

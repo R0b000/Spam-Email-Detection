@@ -6,6 +6,7 @@ import { routes } from '../routes/routes';
 import ComposeMail from './ComposeMail';
 import axios from 'axios';
 import { API_URI } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import { Add as AddIcon } from '@mui/icons-material';
 import type { Mail } from '../types';
 
@@ -40,11 +41,12 @@ const SideBarContent: React.FC = () => {
   const [emails, setEmails] = useState<Mail[]>([]);
   const { type = '' } = useParams();
   const [openDialog, setOpenDialog] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchEmails = async () => {
       try {
-        const userEmail = sessionStorage.getItem('userEmail');
+        const userEmail = user?.email;
 
         if (!userEmail) {
           console.error('User email not found');
@@ -59,7 +61,7 @@ const SideBarContent: React.FC = () => {
     };
 
     fetchEmails();
-  }, [type]);
+  }, [type, user?.email]);
 
   const onComposeClick = () => {
     setOpenDialog(true);

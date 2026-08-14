@@ -9,6 +9,7 @@ import { DeleteOutline } from '@mui/icons-material';
 import NoMails from './common/NoMails';
 import { EMPTY_TABS } from '../constants/constant';
 import { API_URI } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import type { Mail } from '../types';
 
 interface OutletContext {
@@ -24,18 +25,22 @@ const Emails: React.FC = () => {
 
   const { type = '' } = useParams();
   const { openDrawer } = useOutletContext<OutletContext>();
+  const { user, setEmails: setSharedEmails } = useAuth();
 
   useEffect(() => {
     const fetchEmails = async () => {
       try {
-        const userEmail = sessionStorage.getItem('userEmail');
+        const userEmail = user?.email;
         if (!userEmail) {
           console.error('User email not found');
           return;
         }
 
         const response = await axios.get(`${API_URI}/emails/${type}?userEmail=${userEmail}`);
-        setEmails(response.data);
+        const fetchedEmails = response.data as Mail[];
+        // Share the DB data across the whole app via the AuthContext.
+        setEmails(fetchedEmails);
+        setSharedEmails(fetchedEmails);
       } catch (error) {
         console.error('Error fetching emails:', error);
       }
@@ -46,7 +51,7 @@ const Emails: React.FC = () => {
     return () => {
       setSelectedEmails([]);
     };
-  }, [type, refresh]);
+  }, [type, refresh, user?.email]);
 
   useEffect(() => {
     setSelectedEmails([]);

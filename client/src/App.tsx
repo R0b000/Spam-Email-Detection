@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Suspense, lazy } from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Signup from './pages/Signup';
@@ -8,29 +8,32 @@ import { routes } from './routes/routes';
 import Emails from './components/Emails';
 import ViewEmail from './components/ViewEmail';
 import Email from './components/Email';
+import ProtectedRoute from './components/ProtectedRoute';
 import SuspenseLoader from './components/common/SuspenseLoader';
 
 const ErrorComponent = lazy(() => import('./components/common/ErrorComponent'));
 
 const App: React.FC = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  useEffect(() => {
-    const userEmail = sessionStorage.getItem('userEmail');
-    setIsLoggedIn(!!userEmail);
-  }, []);
-
   return (
     <BrowserRouter>
       <Suspense fallback={<SuspenseLoader />}>
         <Routes>
           {/* Register and login routes */}
           <Route path="/register" element={<Signup />} />
-          <Route path="/login" element={<Login setIsLoggedIn={setIsLoggedIn} />} />
+          <Route path="/login" element={<Login />} />
 
-          {/* Define routes using lazy-loaded components */}
+          {/* Redirect the base route to the inbox */}
           <Route path={routes.main.path} element={<Navigate to={`${routes.emails.path}/inbox`} />} />
-          <Route path={routes.main.path} element={<routes.main.element />}>
+
+          {/* Protected routes - redirect to /login when not authenticated */}
+          <Route
+            path={routes.main.path}
+            element={
+              <ProtectedRoute>
+                <Main />
+              </ProtectedRoute>
+            }
+          >
             <Route
               path={`${routes.emails.path}/:type`}
               element={<routes.emails.element />}
@@ -43,8 +46,15 @@ const App: React.FC = () => {
             />
           </Route>
 
-          {/* Define invalid route */}
-          <Route path={routes.invalid.path} element={<Navigate to={`${routes.emails.path}/inbox`} />} />
+          {/* Define invalid route for deeply nested paths */}
+          <Route
+            path={routes.invalid.path}
+            element={
+              <ProtectedRoute>
+                <Navigate to={`${routes.emails.path}/inbox`} />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </Suspense>
     </BrowserRouter>

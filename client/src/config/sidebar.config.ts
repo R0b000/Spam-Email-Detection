@@ -1,11 +1,12 @@
 import {
   DeleteOutlined,
+  DraftsOutlined,
+  InboxOutlined,
   InsertDriveFileOutlined,
   MailOutlined,
-  Photo,
   ReportGmailerrorred,
   SendOutlined,
-  StarOutline,
+  StarBorder,
   SvgIconComponent,
 } from '@mui/icons-material';
 
@@ -19,12 +20,12 @@ export const SIDEBAR_DATA: SidebarItem[] = [
   {
     name: 'inbox',
     title: 'Inbox',
-    icon: Photo,
+    icon: InboxOutlined,
   },
   {
     name: 'starred',
     title: 'Starred',
-    icon: StarOutline,
+    icon: StarBorder,
   },
   {
     name: 'sent',
@@ -34,7 +35,7 @@ export const SIDEBAR_DATA: SidebarItem[] = [
   {
     name: 'draft',
     title: 'Draft',
-    icon: InsertDriveFileOutlined,
+    icon: DraftsOutlined,
   },
   {
     name: 'bin',

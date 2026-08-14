@@ -2,7 +2,7 @@ import { Drawer, styled } from '@mui/material';
 import SideBarContent from './SideBarContent';
 
 const StyledDrawer = styled(Drawer)`
-  margin-top: 54px;
+  margin-top: 64px;
 `;
 
 interface SideBarProps {
@@ -23,11 +23,12 @@ const SideBar = ({ toggleDrawer, openDrawer }: SideBarProps) => {
       variant="persistent"
       sx={{
         '& .MuiDrawer-paper': {
-          width: 200,
-          borderRight: 'none',
-          background: '#f5F5F5',
+          width: 256,
+          borderRight: '1px solid #dadce0',
+          background: '#ffffff',
           marginTop: '64px',
           height: 'calc(100vh - 64px)',
+          overflowX: 'hidden',
         },
       }}
     >

@@ -1,39 +1,55 @@
 import React, { useState } from 'react';
-import { AppBar, Toolbar, styled, InputBase, Box, Button, Avatar } from '@mui/material';
-import { Menu as MenuIcon, Search, Tune, SettingsOutlined } from '@mui/icons-material';
+import { AppBar, Toolbar, styled, Box, InputBase, IconButton, Avatar, Badge } from '@mui/material';
+import { Menu as MenuIcon, Search, Tune, HelpOutline, SettingsOutlined, AppsOutlined } from '@mui/icons-material';
 import Logo from '../img/logo.png';
 import Profile from './Profile';
+import { useAuth } from '../context/AuthContext';
 
 const StyledAppBar = styled(AppBar)({
-  background: '#F5F5F5',
+  background: '#ffffff',
   boxShadow: 'none',
-  display: 'flex',
-  position: 'fixed', // Set position to fixed
-  width: '100%', // Ensure the app bar spans the entire width of the viewport
-  zIndex: 1000, // Ensure it appears above other elements
+  borderBottom: '1px solid #dadce0',
+  position: 'fixed',
+  width: '100%',
+  zIndex: 1200,
 });
 
 const SearchWrapper = styled(Box)({
-  background: '#EAF1FB',
-  borderRadius: 8,
-  width: '50%', // 1/2 width for the search section
+  flex: 1,
+  maxWidth: '720px',
+  background: '#eaf1fb',
+  borderRadius: '24px',
   display: 'flex',
   alignItems: 'center',
-  justifyContent: 'space-between',
-  padding: '0 20px',
-  '& > div': {
-    width: '100%',
-    padding: '0 10px',
+  padding: '0 16px',
+  height: '48px',
+  minHeight: '48px',
+  transition: 'background-color 0.2s, box-shadow 0.2s',
+  '&:focus-within': {
+    background: '#ffffff',
+    boxShadow: '0 1px 1px 0 rgba(65,69,73,0.3), 0 1px 3px 1px rgba(65,69,73,0.15)',
   },
 });
 
-const OptionScrapper = styled(Box)({
-  width: '50%', // 1/2 width for the options section
-  display: 'flex',
-  justifyContent: 'end',
-  '& > svg': {
-    marginLeft: 15,
-  },
+const SearchInput = styled(InputBase)({
+  flex: 1,
+  marginLeft: '12px',
+  fontSize: '16px',
+  color: '#202124',
+});
+
+const AvatarButton = styled(IconButton)({
+  padding: 8,
+});
+
+const UserAvatar = styled(Avatar)({
+  width: 32,
+  height: 32,
+  background: '#f3733b',
+  color: '#fff',
+  fontSize: '16px',
+  fontWeight: 500,
+  cursor: 'pointer',
 });
 
 interface HeaderProps {
@@ -42,44 +58,65 @@ interface HeaderProps {
 
 const Header = ({ toggleDrawer }: HeaderProps) => {
   const [openDialog, setOpenDialog] = useState(false);
+  const { user } = useAuth();
+  const initial = user?.name?.trim().charAt(0).toUpperCase() || user?.email?.trim().charAt(0).toUpperCase() || '?';
 
-  const onUserClick = () => {
-    setOpenDialog(true);
-  };
-
-  const handleCloseDialog = () => {
-    setOpenDialog(false);
-  };
+  const onUserClick = () => setOpenDialog(true);
+  const handleCloseDialog = () => setOpenDialog(false);
 
   return (
     <Box>
       <StyledAppBar>
-        <Toolbar>
-          {/* First Section: Menu Icon and Logo */}
-          <Box style={{ display: 'flex', alignItems: 'center', width: '25%' }}>
-            <MenuIcon color="action" onClick={toggleDrawer} />
-            <img src={Logo} alt="logo" style={{ width: 35, height: 35, margin: 15, display: 'flex', position: 'relative' }} />
-            <p style={{ color: 'black', fontSize: '20px', display: 'flex', textAlign: 'center', justifyContent: 'center', marginTop: '10px' }}>
+        <Toolbar style={{ minHeight: 64, gap: '4px', display: 'flex' }}>
+          {/* Left: menu + logo */}
+          <Box style={{ display: 'flex', alignItems: 'center', flex: '0 0 auto' }}>
+            <IconButton onClick={toggleDrawer}>
+              <MenuIcon color="action" />
+            </IconButton>
+            <img
+              src={Logo}
+              alt="logo"
+              style={{ width: 32, height: 32, margin: '0 4px 0 8px', objectFit: 'contain' }}
+            />
+            <p
+              style={{
+                color: '#5f6368',
+                fontSize: '22px',
+                fontWeight: 400,
+                margin: 0,
+                paddingTop: 2,
+              }}
+            >
               Email
             </p>
           </Box>
 
-          {/* Second Section: Search */}
-          <SearchWrapper>
-            <Search color="action" />
-            <InputBase placeholder="Search Mail" />
-            <Tune color="action" />
-          </SearchWrapper>
+          {/* Center: search */}
+          <Box style={{ flex: 1, display: 'flex', justifyContent: 'center', padding: '0 16px' }}>
+            <SearchWrapper>
+              <Search color="action" />
+              <SearchInput placeholder="Search mail" />
+              <Tune color="action" />
+            </SearchWrapper>
+          </Box>
 
-          {/* Fourth Section: Options */}
-          <OptionScrapper>
-            <Button>
+          {/* Right: icons + avatar */}
+          <Box style={{ display: 'flex', alignItems: 'center', gap: '4px', flex: '0 0 auto' }}>
+            <IconButton>
+              <HelpOutline color="action" />
+            </IconButton>
+            <IconButton>
               <SettingsOutlined color="action" />
-            </Button>
-            <Button onClick={onUserClick}>
-              <Avatar color="action" />
-            </Button>
-          </OptionScrapper>
+            </IconButton>
+            <IconButton>
+              <AppsOutlined color="action" />
+            </IconButton>
+            <AvatarButton onClick={onUserClick} style={{ marginLeft: 4 }}>
+              <Badge color="success" variant="dot" overlap="circular" anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}>
+                <UserAvatar>{initial}</UserAvatar>
+              </Badge>
+            </AvatarButton>
+          </Box>
         </Toolbar>
       </StyledAppBar>
       <Profile open={openDialog} onClose={handleCloseDialog} />

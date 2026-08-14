@@ -1,4 +1,4 @@
-import { ListItem, Checkbox, Box, Typography, styled } from '@mui/material';
+import { Box, Checkbox, styled } from '@mui/material';
 import { StarBorder, Star } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import useApi from '../hooks/useApi';
@@ -6,87 +6,108 @@ import { API_URLS } from '../services/api.urls';
 import { routes } from '../routes/routes';
 import type { Mail } from '../types';
 
-const Wrapper = styled(ListItem)({
-  position: 'relative',
-  padding: '0 0 0 10px',
-  background: '#f2f6fc',
+const Wrapper = styled(Box)({
+  display: 'flex',
+  alignItems: 'center',
+  minHeight: '40px',
+  padding: '0 10px',
   cursor: 'pointer',
-  transition: 'background-color 0.3s, transform 0.01s',
-  border: 'none',
-  borderRadius: 'none',
-  boxShadow: '0 2px 4px rgba(0.1, 0.1, 0.1, 0.1)',
+  background: '#ffffff',
+  borderBottom: '1px solid #e8eaed',
+  boxSizing: 'border-box',
   '&:hover': {
-    backgroundColor: '#e3e8f5',
-    transform: 'scale(1.01)',
+    boxShadow: 'inset 1px 0 0 #dadce0, inset -1px 0 0 #dadce0, 0 1px 2px rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15)',
+    zIndex: 2,
   },
-  '& > div': {
-    display: 'flex',
-    width: '100%',
+  '&:hover .row-actions': {
+    opacity: 1,
   },
-  '& > div > p': {
-    fontSize: '11px',
+  '& .row-actions': {
+    opacity: 0,
+    transition: 'opacity 0.2s',
   },
 });
 
-const BoxContainer = styled(Box)({
-  display: 'flex',
-  flexDirection: 'row',
-  width: '100%',
+const ActionCheckbox = styled(Checkbox)({
+  padding: 4,
+  marginRight: 4,
+  '&.Mui-checked': {
+    opacity: 1,
+  },
 });
 
-const ItemWrapper = styled(Box)({
-  flex: '1',
-  minWidth: '25%',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'flex-start',
-  textAlign: 'justify',
-});
-
-const ContentWrapper = styled(Box)({
-  flex: '2',
-  minWidth: '50%',
+const ActionStar = styled('div')({
   display: 'flex',
   alignItems: 'center',
-  justifyContent: 'flex-start',
-  textAlign: 'justify',
+  color: '#5f6368',
+  '& .MuiSvgIcon-root': {
+    fontSize: '20px',
+  },
 });
 
-const DateWrapper = styled(Box)({
-  flex: '1',
-  minWidth: '25%',
-  marginLeft: '60px',
+const Sender = styled(Box)({
+  minWidth: '180px',
+  maxWidth: '230px',
+  width: '22%',
+  fontSize: '14px',
+  fontWeight: 700,
+  color: '#202124',
+  whiteSpace: 'nowrap',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  paddingRight: '8px',
+});
+
+const Content = styled(Box)({
+  flex: 1,
+  display: 'flex',
+  alignItems: 'center',
+  whiteSpace: 'nowrap',
+  overflow: 'hidden',
+  fontSize: '14px',
+  color: '#5f6368',
+});
+
+const SubjectText = styled('span')({
+  fontWeight: 700,
+  color: '#202124',
+  whiteSpace: 'nowrap',
+});
+
+const BodyPreview = styled('span')({
+  color: '#5f6368',
+  whiteSpace: 'nowrap',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+});
+
+const DateText = styled(Box)({
   fontSize: '12px',
-  color: '#5F6368',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'flex-start',
-});
-
-const Label = styled(Typography)({
-  fontWeight: 'bold',
+  color: '#5f6368',
+  marginLeft: 'auto',
+  paddingLeft: '12px',
+  whiteSpace: 'nowrap',
 });
 
 interface EmailProps {
   email: Mail;
   starred?: boolean;
-  setStarredEmail: React.Dispatch<React.SetStateAction<boolean>>;
   selectedEmails: string[];
   setSelectedEmails: React.Dispatch<React.SetStateAction<string[]>>;
+  refreshList?: () => void;
 }
 
-const Email = ({ email, starred, setStarredEmail, selectedEmails, setSelectedEmails }: EmailProps) => {
+const Email = ({ email, starred, selectedEmails, setSelectedEmails, refreshList }: EmailProps) => {
   const { _id, receiverEmail, subject, body, date } = email;
-
   const toggleStarredEmailService = useApi(API_URLS.toggleStarredMails);
   const navigate = useNavigate();
+  const isSelected = selectedEmails.includes(_id);
 
-  const toggleStarredEmail = async () => {
+  const toggleStarredEmail = async (e: React.MouseEvent) => {
+    e.stopPropagation();
     try {
-      const response = await toggleStarredEmailService.call({ id: _id, value: !starred });
-      setStarredEmail((prev) => !prev);
-      console.log('Starred status updated successfully', response);
-      window.location.reload(); // Reload the page upon successful toggle
+      await toggleStarredEmailService.call({ id: _id, value: !starred });
+      refreshList?.();
     } catch (error) {
       console.error('Error toggling starred email:', error);
     }
@@ -97,7 +118,7 @@ const Email = ({ email, starred, setStarredEmail, selectedEmails, setSelectedEma
   };
 
   const handleChange = () => {
-    if (selectedEmails.includes(_id)) {
+    if (isSelected) {
       setSelectedEmails((prev) => prev.filter((id) => id !== _id));
     } else {
       setSelectedEmails((prev) => [...prev, _id]);
@@ -105,40 +126,29 @@ const Email = ({ email, starred, setStarredEmail, selectedEmails, setSelectedEma
   };
 
   const formattedDate = new Date(date);
-  const dayOfMonth = formattedDate.getDate();
-  const monthName = formattedDate.toLocaleString('default', { month: 'long' });
+  const day = formattedDate.getDate();
+  const month = formattedDate.toLocaleString('default', { month: 'short' });
 
   return (
-    <Wrapper>
-      <Checkbox size="small" checked={selectedEmails.includes(_id)} onChange={handleChange} />
-      {starred ? (
-        <Star fontSize="small" style={{ marginRight: 10 }} onClick={toggleStarredEmail} />
-      ) : (
-        <StarBorder fontSize="small" style={{ marginRight: 10 }} onClick={toggleStarredEmail} />
-      )}
-      <BoxContainer onClick={handleEmailClick}>
-        <ItemWrapper>
-          <div>
-            <Label>{receiverEmail ? receiverEmail : ''}</Label>
-          </div>
-        </ItemWrapper>
+    <Wrapper onClick={handleEmailClick}>
+      <Box className="row-actions" style={{ display: 'flex', alignItems: 'center' }}>
+        <ActionCheckbox size="small" checked={isSelected} onChange={handleChange} onClick={(e) => e.stopPropagation()} />
+        <ActionStar onClick={toggleStarredEmail} style={{ cursor: 'pointer' }}>
+          {starred ? <Star style={{ color: '#f7cb4d' }} /> : <StarBorder />}
+        </ActionStar>
+      </Box>
 
-        <ContentWrapper>
-          <div>
-            {subject && <Label>{subject}</Label>}
-            {subject && body ? '- ' : null}
-            {body}
-          </div>
-        </ContentWrapper>
+      <Sender title={receiverEmail || ''}>{receiverEmail || ''}</Sender>
 
-        <DateWrapper>
-          <div>
-            <Label>
-              {dayOfMonth}&nbsp;{monthName}
-            </Label>
-          </div>
-        </DateWrapper>
-      </BoxContainer>
+      <Content>
+        {subject && <SubjectText>{subject}</SubjectText>}
+        {subject && body ? <span>&nbsp;-&nbsp;</span> : null}
+        {body && <BodyPreview>{body}</BodyPreview>}
+      </Content>
+
+      <DateText>
+        {day} {month}
+      </DateText>
     </Wrapper>
   );
 };

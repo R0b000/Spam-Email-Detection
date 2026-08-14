@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useOutletContext } from 'react-router-dom';
 import axios from 'axios';
-import { Box, List, Checkbox, IconButton } from '@mui/material';
+import { Box, Checkbox, IconButton, Typography, styled } from '@mui/material';
+import { DeleteOutline, RefreshOutlined, MoreVertOutlined } from '@mui/icons-material';
 import Email from './Email';
 import useApi from '../hooks/useApi';
 import { API_URLS } from '../services/api.urls';
-import { DeleteOutline } from '@mui/icons-material';
 import NoMails from './common/NoMails';
 import { EMPTY_TABS } from '../constants/constant';
 import { API_URI } from '../services/api';
@@ -16,10 +16,29 @@ interface OutletContext {
   openDrawer: boolean;
 }
 
+const Toolbar = styled(Box)({
+  position: 'sticky',
+  top: '64px',
+  zIndex: 10,
+  backgroundColor: '#ffffff',
+  padding: '4px 12px',
+  borderBottom: '1px solid #dadce0',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '4px',
+});
+
+const ListContainer = styled(Box)({
+  padding: '4px 0 24px',
+});
+
+const ToolbarButton = styled(IconButton)({
+  color: '#5f6368',
+});
+
 const Emails: React.FC = () => {
   const [emails, setEmails] = useState<Mail[]>([]);
   const [refresh, setRefresh] = useState(false);
-  const [starredEmail, setStarredEmail] = useState(false);
   const [selectedEmails, setSelectedEmails] = useState<string[]>([]);
   const deleteEmailsService = useApi(API_URLS.deleteSelectedEmails);
 
@@ -38,7 +57,6 @@ const Emails: React.FC = () => {
 
         const response = await axios.get(`${API_URI}/emails/${type}?userEmail=${userEmail}`);
         const fetchedEmails = response.data as Mail[];
-        // Share the DB data across the whole app via the AuthContext.
         setEmails(fetchedEmails);
         setSharedEmails(fetchedEmails);
       } catch (error) {
@@ -59,78 +77,69 @@ const Emails: React.FC = () => {
 
   const selectAllEmails = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
-      const emailIds = emails.map((email) => email._id);
-      setSelectedEmails(emailIds);
+      setSelectedEmails(emails.map((email) => email._id));
     } else {
       setSelectedEmails([]);
     }
   };
 
-  const deleteSelectedEmails = async (type: string) => {
+  const deleteSelectedEmails = async () => {
     try {
-      // Check if all emails are selected
-      const allEmailsSelected = selectedEmails.length === emails.length;
-
-      // Define the type to be updated
-      const updatedType = 'bin'; // Modify this according to your requirement
-
-      // Determine if the emails are currently in the bin
-      const bin = type === 'bin';
-
-      console.log('Type:', type);
-
-      if (!allEmailsSelected || !bin) {
-        console.log('Sending delete request...');
-        // If not all emails are selected or the type is not bin, send a delete request
-        const response = await deleteEmailsService.call({
-          messageIds: selectedEmails,
-          type: updatedType,
-          value: true,
-        });
-        setRefresh((prev) => !prev);
-      } else {
-        console.log('Condition not met.');
-        // Handle other cases if needed
-      }
-      setStarredEmail((prev) => !prev);
+      if (selectedEmails.length === 0) return;
+      await deleteEmailsService.call({
+        messageIds: selectedEmails,
+        type: 'bin',
+        value: true,
+      });
+      setRefresh((prev) => !prev);
+      setSelectedEmails([]);
     } catch (error) {
       console.error('Error updating emails:', error);
-      // Handle error
     }
   };
 
+  const allSelected = emails.length > 0 && selectedEmails.length === emails.length;
+
   return (
-    <Box style={{ width: openDrawer ? 'calc(100% - 200px)' : '100%', marginLeft: openDrawer ? '200px' : '0' }}>
-      <Box
-        style={{
-          position: 'sticky',
-          top: '65px',
-          zIndex: 1,
-          backgroundColor: '#fff',
-          padding: '10px 0',
-          borderBottom: '1px solid #e0e0e0',
-        }}
-      >
+    <Box style={{ width: openDrawer ? 'calc(100% - 256px)' : '100%', marginLeft: openDrawer ? '256px' : '0' }}>
+      <Toolbar>
         <Checkbox
           size="small"
-          checked={emails.length > 0 && selectedEmails.length === emails.length}
-          onChange={(e) => selectAllEmails(e)}
+          checked={allSelected}
+          onChange={selectAllEmails}
+          indeterminate={selectedEmails.length > 0 && !allSelected}
         />
-        <IconButton onClick={() => deleteSelectedEmails(type)}>
+        <ToolbarButton onClick={() => setRefresh((prev) => !prev)}>
+          <RefreshOutlined />
+        </ToolbarButton>
+        <ToolbarButton onClick={deleteSelectedEmails} disabled={selectedEmails.length === 0}>
           <DeleteOutline />
-        </IconButton>
-      </Box>
-      <List style={{ marginTop: '10px' }}>
+        </ToolbarButton>
+        {selectedEmails.length > 0 && (
+          <Typography variant="body2" style={{ marginLeft: 8, color: '#5f6368' }}>
+            {selectedEmails.length} selected
+          </Typography>
+        )}
+        <Box style={{ marginLeft: 'auto', display: 'flex' }}>
+          <ToolbarButton>
+            <MoreVertOutlined />
+          </ToolbarButton>
+        </Box>
+      </Toolbar>
+
+      <ListContainer>
         {emails?.map?.((email) => (
           <Email
             key={email._id}
             email={email}
+            starred={email.starred}
             selectedEmails={selectedEmails}
             setSelectedEmails={setSelectedEmails}
-            setStarredEmail={setStarredEmail}
+            refreshList={() => setRefresh((prev) => !prev)}
           />
         ))}
-      </List>
+      </ListContainer>
+
       {emails.length === 0 && <NoMails message={EMPTY_TABS[type]} />}
     </Box>
   );

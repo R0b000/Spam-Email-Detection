@@ -1,0 +1,1 @@
+﻿src/pages/Main.tsx(2,20): error TS2307: Cannot find module '../components/Header' or its corresponding type declarations.

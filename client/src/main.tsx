@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { styled } from '@mui/material';
 import AuthProvider from './context/AuthContext';
 import App from './App';
+import './index.css';
 
 const StyledApp = styled(App)({
   '@media (max-width: 450px)': {

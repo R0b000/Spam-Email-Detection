@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
-import { API_URI } from '../services/api';
+import { authController } from '../Manager/Controller/authController';
 import Logo from '../img/logo.png';
 import '../css/auth.css';
 
@@ -55,13 +54,19 @@ const FloatInput = ({
   );
 };
 
+/**
+ * FooterBar component renders a footer section with language selection and navigation links
+ * @returns {JSX.Element} The footer component with language dropdown and help links
+ */
 const FooterBar = () => (
   <footer className="gauth-footer" style={{ maxWidth: 1040, marginTop: 24 }}>
+    {/* Language selection dropdown with default value set to English (United States) */}
     <select defaultValue="en-US" aria-label="Language">
       <option value="en-US">English (United States)</option>
       <option value="es">Español</option>
       <option value="fr">Français</option>
     </select>
+    {/* Container for footer navigation links */}
     <div className="gauth-footer-links">
       <a href="#">Help</a>
       <a href="#">Privacy</a>
@@ -102,12 +107,11 @@ const Signup: React.FC = () => {
 
     try {
       setLoading(true);
-      const response = await axios.post(`${API_URI}/register`, {
+      await authController.register({
         name: `${firstName.trim()} ${lastName.trim()}`,
-        email,
+        email: `${username.trim()}@email.com`,
         password,
       });
-      console.log(response);
       navigate('/login');
     } catch (err) {
       console.error(err);

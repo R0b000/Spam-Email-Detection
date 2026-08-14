@@ -1,19 +1,8 @@
-export const gmailLogo =
-  'https://ssl.gstatic.com/ui/v1/icons/mail/rfr/logo_gmail_lockup_default_1x_r5.png';
-export const emptyInbox =
-  'https://miro.medium.com/max/1088/1*DhOnyEHovQZ31rH00-VUDw.png';
+/** Profile-image placeholder used in ViewEmail. */
 export const emptyProfilePic =
   'https://ssl.gstatic.com/ui/v1/icons/mail/profile_mask2.png';
 
-export const VIEWS: Record<string, string> = {
-  inbox: 'inbox',
-  starred: 'starred',
-  sent: 'sent',
-  drafts: 'draft',
-  bin: 'bin',
-  spam: 'spam',
-};
-
+/** Headings + subheadings shown when a folder is empty. */
 export interface EmptyTab {
   heading: string;
   subHeading: string;

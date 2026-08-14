@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Dialog, Box, Typography, styled, InputBase, TextField, Button } from '@mui/material';
 import { Close, DeleteOutlined, AttachFile } from '@mui/icons-material';
-import useApi from '../hooks/useApi';
-import { API_URLS } from '../services/api.urls';
+import useApi from '../Helper/useApi';
+import { API_URLS } from '../Manager/Service/api.urls';
 import axios from 'axios';
-import { API_URI } from '../services/api';
+import { API_URI } from '../Configuration/axios';
 import { useAuth } from '../context/AuthContext';
 import type { Attachment } from '../types';
 

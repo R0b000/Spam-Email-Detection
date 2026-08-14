@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import API from '../services/api';
-import type { ServiceUrlObject } from '../services/api.urls';
+import API from '../Manager/Service/api';
+import type { ServiceUrlObject } from '../Manager/Service/api.urls';
 
 export interface UseApiResult {
   call: (payload?: any, type?: string) => Promise<void>;
@@ -11,6 +11,10 @@ export interface UseApiResult {
   isLoading: boolean;
 }
 
+/**
+ * React hook that wraps a service-call and exposes loading/error/response state.
+ * Drop-in replacement for the old hooks/useApi.ts — just moved into Helper/.
+ */
 const useApi = (urlObject: ServiceUrlObject): UseApiResult => {
   const [response, setResponse] = useState<any>(null);
   const [data, setData] = useState<any>(null);
@@ -27,12 +31,12 @@ const useApi = (urlObject: ServiceUrlObject): UseApiResult => {
 
     try {
       const res = await API(urlObject, payload, type);
-      console.log(res); // Log the response object
+      console.log(res);
       setResponse(res.data);
       setData(res.data);
       setStatus(res.status);
     } catch (err: any) {
-      console.error(err); // Log any errors
+      console.error(err);
       setError('User-defined error message: ' + err.message);
     } finally {
       setIsLoading(false);

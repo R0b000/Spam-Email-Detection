@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { Dialog, Button, styled } from '@mui/material';
-import axios from 'axios';
-import { API_URI } from '../services/api';
 import { useNavigate } from 'react-router-dom';
+import { authController } from '../Manager/Controller/authController';
 import { useAuth } from '../context/AuthContext';
 
 // Define styled components
@@ -44,11 +43,11 @@ const Profile = ({ open, onClose }: ProfileProps) => {
       setLoading(true);
       setError(null);
 
-      const result = await axios.post(`${API_URI}/logout`);
+      const result = await authController.logout();
 
       console.log(result);
 
-      if (result.data === 'Logout success' || result.data?.message === 'Logout success') {
+      if (result.message === 'Logout success') {
         // Clear the authenticated user from the shared AuthContext & session storage.
         logout();
       } else {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Typography, styled } from '@mui/material';
 import { useOutletContext, useLocation } from 'react-router-dom';
-import { emptyProfilePic } from '../constants/constant';
+import { emptyProfilePic } from '../config/constant';
 import { ArrowBack, Delete } from '@mui/icons-material';
 import type { MainOutletContext } from '../pages/Main';
 import type { Mail } from '../types';

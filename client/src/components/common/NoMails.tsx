@@ -1,6 +1,6 @@
 import { Box, Typography, styled } from '@mui/material';
 import { MailOutlineOutlined, StarBorder, SendOutlined, DeleteSweepOutlined, DraftsOutlined, ReportGmailerrorred } from '@mui/icons-material';
-import type { EmptyTab } from '../../constants/constant';
+import type { EmptyTab } from '../../config/constant';
 
 const Component = styled(Box)({
   display: 'flex',

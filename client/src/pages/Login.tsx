@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
-import { API_URI } from '../services/api';
+import { authController } from '../Manager/Controller/authController';
 import { useAuth } from '../context/AuthContext';
 import Logo from '../img/logo.png';
 import '../css/auth.css';
@@ -87,15 +86,15 @@ const Login: React.FC = () => {
       setLoading(true);
       setError(null);
 
-      const result = await axios.post(`${API_URI}/login`, { email, password });
+      const result = await authController.login(email, password);
 
-      if (result.data.message === 'Success') {
-        const { name, email } = result.data.user;
+      if (result.message === 'Success') {
+        const { name, email } = result.user!;
         setName(name);
         login({ name, email });
         navigate('/emails');
       } else {
-        console.log('Login failed:', result.data.message);
+        console.log('Login failed:', result.message);
         setError('Wrong password. Try again or click "Forgot password" to reset it.');
       }
     } catch (err) {

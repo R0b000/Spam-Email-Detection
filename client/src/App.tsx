@@ -4,7 +4,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import Signup from './pages/Signup';
 import Login from './pages/Login';
 import Main from './pages/Main';
-import { routes } from './routes/routes';
+import { routes } from './Router/routes';
 import Emails from './components/Emails';
 import ViewEmail from './components/ViewEmail';
 import Email from './components/Email';

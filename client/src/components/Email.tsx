@@ -1,9 +1,9 @@
 import { Box, Checkbox, styled } from '@mui/material';
 import { StarBorder, Star } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import useApi from '../hooks/useApi';
-import { API_URLS } from '../services/api.urls';
-import { routes } from '../routes/routes';
+import useApi from '../Helper/useApi';
+import { API_URLS } from '../Manager/Service/api.urls';
+import { routes } from '../Router/routes';
 import type { Mail } from '../types';
 
 const Wrapper = styled(Box)({

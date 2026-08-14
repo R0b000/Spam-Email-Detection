@@ -1,7 +1,7 @@
 import { Box, IconButton, Tooltip, styled } from '@mui/material';
 import { NavLink } from 'react-router-dom';
 import { SIDEBAR_DATA } from '../config/sidebar.config';
-import { routes } from '../routes/routes';
+import { routes } from '../Router/routes';
 import Logo from '../img/logo.png';
 
 const MiniBar = styled(Box)({

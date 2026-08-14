@@ -1,29 +1,32 @@
 import { useState, Suspense } from 'react';
 import Header from '../components/Header';
 import SideBar from '../components/SideBar';
-import Emails from '../components/Emails';
-import { MailOutlineOutlined } from '@mui/icons-material';
+import MiniSideBar from '../components/MiniSideBar';
 import { Box } from '@mui/material';
 import { Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import SuspenseLoader from '../components/common/SuspenseLoader';
 
+export interface MainOutletContext {
+  openDrawer: boolean;
+  sidebarWidth: number;
+}
+
 const Main: React.FC = () => {
   const [openDrawer, setOpenDrawer] = useState(true);
-  const { user } = useAuth(); // Retrieve the user (from the DB) via AuthContext
-  const userName = user?.name ?? '';
+  const { user } = useAuth();
 
-  const toggleDrawer = () => {
-    setOpenDrawer((prevState) => !prevState);
-  };
+  const toggleDrawer = () => setOpenDrawer((prev) => !prev);
+
+  const sidebarWidth = openDrawer ? 256 : 64;
 
   return (
     <>
       <Header toggleDrawer={toggleDrawer} />
       <Box>
-        <SideBar openDrawer={openDrawer} />
+        {openDrawer ? <SideBar openDrawer={openDrawer} /> : <MiniSideBar />}
         <Suspense fallback={<SuspenseLoader />}>
-          <Outlet context={{ openDrawer }} />
+          <Outlet context={{ openDrawer, sidebarWidth }} />
         </Suspense>
       </Box>
     </>

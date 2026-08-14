@@ -11,9 +11,11 @@ import { EMPTY_TABS } from '../constants/constant';
 import { API_URI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import type { Mail } from '../types';
+import type { MainOutletContext } from '../pages/Main';
 
-interface OutletContext {
+interface OutletContext extends MainOutletContext {
   openDrawer: boolean;
+  sidebarWidth: number;
 }
 
 const Toolbar = styled(Box)({
@@ -45,6 +47,7 @@ const Emails: React.FC = () => {
   const { type = '' } = useParams();
   const { openDrawer } = useOutletContext<OutletContext>();
   const { user, setEmails: setSharedEmails } = useAuth();
+  const { sidebarWidth } = useOutletContext<OutletContext>();
 
   useEffect(() => {
     const fetchEmails = async () => {
@@ -101,7 +104,7 @@ const Emails: React.FC = () => {
   const allSelected = emails.length > 0 && selectedEmails.length === emails.length;
 
   return (
-    <Box style={{ width: openDrawer ? 'calc(100% - 256px)' : '100%', marginLeft: openDrawer ? '256px' : '0' }}>
+    <Box style={{ width: `calc(100% - ${sidebarWidth}px)`, marginLeft: sidebarWidth }}>
       <Toolbar>
         <Checkbox
           size="small"
@@ -140,7 +143,7 @@ const Emails: React.FC = () => {
         ))}
       </ListContainer>
 
-      {emails.length === 0 && <NoMails message={EMPTY_TABS[type]} />}
+      {emails.length === 0 && <NoMails message={EMPTY_TABS[type]} type={type} />}
     </Box>
   );
 };

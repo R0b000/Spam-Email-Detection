@@ -3,6 +3,7 @@ import { Box, Typography, styled } from '@mui/material';
 import { useOutletContext, useLocation } from 'react-router-dom';
 import { emptyProfilePic } from '../constants/constant';
 import { ArrowBack, Delete } from '@mui/icons-material';
+import type { MainOutletContext } from '../pages/Main';
 import type { Mail } from '../types';
 
 const IconWrapper = styled(Box)({
@@ -70,12 +71,8 @@ interface ViewEmailState {
   type: string;
 }
 
-interface OutletContext {
-  openDrawer: boolean;
-}
-
 const ViewEmail: React.FC = () => {
-  const { openDrawer } = useOutletContext<OutletContext>();
+  const { sidebarWidth } = useOutletContext<MainOutletContext>();
   const { state } = useLocation();
   const { email, type } = state as ViewEmailState;
 
@@ -83,7 +80,7 @@ const ViewEmail: React.FC = () => {
   console.log('Attachment:', email.attachment);
 
   return (
-    <Box style={{ width: openDrawer ? 'calc(100% - 200px)' : '100%', marginLeft: openDrawer ? '200px' : '0' }}>
+    <Box style={{ width: `calc(100% - ${sidebarWidth}px)`, marginLeft: sidebarWidth }}>
       <IconWrapper>
         <ArrowBack fontSize="small" color="action" onClick={() => window.history.back()} />
         <Delete fontSize="small" color="action" style={{ marginLeft: 40 }} />
@@ -93,7 +90,7 @@ const ViewEmail: React.FC = () => {
       </Subject>
       <Box style={{ display: 'flex' }}>
         <Image src={emptyProfilePic} alt="profile" />
-        <Container style={{ marginRight: openDrawer ? '50px' : '50px' }}>
+        <Container style={{ marginRight: 50 }}>
           <Box>
             <Typography>
               {email.to && email.to.split('@')[0]}

@@ -23,3 +23,9 @@ body {
   font-family: "Google Sans", Roboto, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
+
+@media (max-width: 450px) {
+  .node {
+    font-size: 50%;
+  }
+}

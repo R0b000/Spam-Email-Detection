@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useOutletContext } from 'react-router-dom';
 import axios from 'axios';
-import { Box, Checkbox, IconButton, Typography, styled } from '@mui/material';
+import { Box, Checkbox, IconButton, Typography } from '@mui/material';
 import { DeleteOutline, RefreshOutlined, MoreVertOutlined } from '@mui/icons-material';
 import Email from './Email';
 import useApi from '../Helper/useApi';
@@ -17,26 +17,6 @@ interface OutletContext extends MainOutletContext {
   openDrawer: boolean;
   sidebarWidth: number;
 }
-
-const Toolbar = styled(Box)({
-  position: 'sticky',
-  top: '64px',
-  zIndex: 10,
-  backgroundColor: '#ffffff',
-  padding: '4px 12px',
-  borderBottom: '1px solid #dadce0',
-  display: 'flex',
-  alignItems: 'center',
-  gap: '4px',
-});
-
-const ListContainer = styled(Box)({
-  padding: '4px 0 24px',
-});
-
-const ToolbarButton = styled(IconButton)({
-  color: '#5f6368',
-});
 
 const Emails: React.FC = () => {
   const [emails, setEmails] = useState<Mail[]>([]);
@@ -104,33 +84,33 @@ const Emails: React.FC = () => {
   const allSelected = emails.length > 0 && selectedEmails.length === emails.length;
 
   return (
-    <Box style={{ width: `calc(100% - ${sidebarWidth}px)`, marginLeft: sidebarWidth }}>
-      <Toolbar>
+    <Box className="transition-all" style={{ width: `calc(100% - ${sidebarWidth}px)`, marginLeft: sidebarWidth }}>
+      <Box className="sticky top-[64px] z-[10] bg-white px-[4px_12px] border-b border-[#dadce0] flex items-center gap-[4px]">
         <Checkbox
           size="small"
           checked={allSelected}
           onChange={selectAllEmails}
           indeterminate={selectedEmails.length > 0 && !allSelected}
         />
-        <ToolbarButton onClick={() => setRefresh((prev) => !prev)}>
+        <IconButton onClick={() => setRefresh((prev) => !prev)} className="text-[#5f6368]">
           <RefreshOutlined />
-        </ToolbarButton>
-        <ToolbarButton onClick={deleteSelectedEmails} disabled={selectedEmails.length === 0}>
+        </IconButton>
+        <IconButton onClick={deleteSelectedEmails} disabled={selectedEmails.length === 0} className="text-[#5f6368]">
           <DeleteOutline />
-        </ToolbarButton>
+        </IconButton>
         {selectedEmails.length > 0 && (
-          <Typography variant="body2" style={{ marginLeft: 8, color: '#5f6368' }}>
+          <Typography variant="body2" className="ml-2 text-gsubtext">
             {selectedEmails.length} selected
           </Typography>
         )}
-        <Box style={{ marginLeft: 'auto', display: 'flex' }}>
-          <ToolbarButton>
+        <Box className="ml-auto flex">
+          <IconButton className="text-[#5f6368]">
             <MoreVertOutlined />
-          </ToolbarButton>
+          </IconButton>
         </Box>
-      </Toolbar>
+      </Box>
 
-      <ListContainer>
+      <Box className="p-[4px_0_24px]">
         {emails?.map?.((email) => (
           <Email
             key={email._id}
@@ -141,7 +121,7 @@ const Emails: React.FC = () => {
             refreshList={() => setRefresh((prev) => !prev)}
           />
         ))}
-      </ListContainer>
+      </Box>
 
       {emails.length === 0 && <NoMails message={EMPTY_TABS[type]} type={type} />}
     </Box>

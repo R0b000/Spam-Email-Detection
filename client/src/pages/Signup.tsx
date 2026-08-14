@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authController } from '../Manager/Controller/authController';
-import Logo from '../img/logo.png';
+import Logo from '../img/Email.svg';
 
 interface FloatInputProps {
   type: string;

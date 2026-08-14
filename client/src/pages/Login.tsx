@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authController } from '../Manager/Controller/authController';
 import { useAuth } from '../context/AuthContext';
-import Logo from '../img/logo.png';
+import Logo from '../img/Email.svg';
 
 type Step = 'email' | 'password';
 

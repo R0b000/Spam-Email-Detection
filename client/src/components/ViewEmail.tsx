@@ -1,70 +1,10 @@
 import React from 'react';
-import { Box, Typography, styled } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import { useOutletContext, useLocation } from 'react-router-dom';
 import { emptyProfilePic } from '../config/constant';
 import { ArrowBack, Delete } from '@mui/icons-material';
 import type { MainOutletContext } from '../pages/Main';
 import type { Mail } from '../types';
-
-const IconWrapper = styled(Box)({
-  padding: 15,
-});
-
-const Subject = styled(Typography)({
-  fontSize: 22,
-  margin: '10px 0 20px 75px',
-  display: 'flex',
-  fontWeight: 'bold',
-});
-
-const Indicator = styled(Box)`
-  font-size: 12px !important;
-  background: #ddd;
-  color: #222;
-  border-radius: 4px;
-  margin-left: 6px;
-  padding: 2px 4px;
-  align-self: center;
-`;
-
-const Image = styled('img')({
-  borderRadius: '50%',
-  width: 40,
-  height: 40,
-  margin: '5px 10px 0 10px',
-  backgroundColor: '#cccccc',
-});
-
-const Container = styled(Box)({
-  marginLeft: 15,
-  width: '100%',
-  '& > div': {
-    display: 'flex',
-    '& > p > span': {
-      fontSize: 12,
-      color: '#5E5E5E',
-    },
-  },
-});
-
-const DateText = styled(Typography)({
-  position: 'absolute',
-  margin: '0 50px 100px auto',
-  fontSize: 14,
-  color: '#5E5E5E',
-});
-
-const BodyContent = styled(Typography)({
-  marginTop: 20,
-  textAlign: 'justify',
-  fontSize: 16,
-});
-
-const Attachment = styled('img')({
-  maxWidth: '100%',
-  maxHeight: '200px',
-  marginTop: '20px',
-});
 
 interface ViewEmailState {
   email: Mail;
@@ -80,17 +20,24 @@ const ViewEmail: React.FC = () => {
   console.log('Attachment:', email.attachment);
 
   return (
-    <Box style={{ width: `calc(100% - ${sidebarWidth}px)`, marginLeft: sidebarWidth }}>
-      <IconWrapper>
+    <Box className="ml-[15px] w-full" style={{ width: `calc(100% - ${sidebarWidth}px)`, marginLeft: sidebarWidth }}>
+      <Box className="p-[15px]">
         <ArrowBack fontSize="small" color="action" onClick={() => window.history.back()} />
-        <Delete fontSize="small" color="action" style={{ marginLeft: 40 }} />
-      </IconWrapper>
-      <Subject>
-        {email.subject} <Indicator component="span">{type}</Indicator>
-      </Subject>
-      <Box style={{ display: 'flex' }}>
-        <Image src={emptyProfilePic} alt="profile" />
-        <Container style={{ marginRight: 50 }}>
+        <Delete fontSize="small" color="action" className="ml-[40px]" />
+      </Box>
+      <Typography className="text-[22px] font-bold m-[10px_0_20px_75px] flex items-center">
+        {email.subject}
+        <span className="text-xs text-[#5E5E5E] bg-[#ddd] text-[#222] rounded-[4px] ml-[6px] px-[4px] py-[2px] self-center align-middle">
+          {type}
+        </span>
+      </Typography>
+      <Box className="flex">
+        <img
+          src={emptyProfilePic}
+          alt="profile"
+          className="rounded-[50%] w-[40px] h-[40px] m-[5px_10px_0_10px] bg-[#ccc]"
+        />
+        <Box className="mr-[50px] w-full">
           <Box>
             <Typography>
               {email.to && email.to.split('@')[0]}
@@ -100,7 +47,7 @@ const ViewEmail: React.FC = () => {
                 </Box>
               )}
             </Typography>
-            <DateText>
+            <Typography className="absolute m-[0_50px_100px_auto] text-[14px] text-[#5E5E5E]">
               {email.date && (
                 <>
                   {new Date(email.date).getDate()}&nbsp;
@@ -108,11 +55,19 @@ const ViewEmail: React.FC = () => {
                   {new Date(email.date).getFullYear()}
                 </>
               )}
-            </DateText>
+            </Typography>
           </Box>
-          <BodyContent>{email.body}</BodyContent>
-          {email.attachment && <Attachment src={email.attachment.src} alt={email.attachment.alt} />}
-        </Container>
+          <Typography className="mt-[20px] text-justify text-[16px]">
+            {email.body}
+          </Typography>
+          {email.attachment && (
+            <img
+              src={email.attachment.src}
+              alt={email.attachment.alt}
+              className="max-w-full max-h-[200px] mt-[20px]"
+            />
+          )}
+        </Box>
       </Box>
     </Box>
   );

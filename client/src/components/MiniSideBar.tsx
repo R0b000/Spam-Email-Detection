@@ -1,69 +1,31 @@
-import { Box, IconButton, Tooltip, styled } from '@mui/material';
+import { Box, IconButton, Tooltip } from '@mui/material';
 import { NavLink } from 'react-router-dom';
 import { SIDEBAR_DATA } from '../config/sidebar.config';
 import { routes } from '../Router/routes';
-import Logo from '../img/logo.png';
-
-const MiniBar = styled(Box)({
-  position: 'fixed',
-  top: 64,
-  left: 0,
-  width: 64,
-  height: 'calc(100vh - 64px)',
-  background: '#ffffff',
-  borderRight: '1px solid #dadce0',
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  paddingTop: 8,
-  boxSizing: 'border-box',
-  zIndex: 1100,
-});
-
-const BrandLogo = styled('img')({
-  width: 32,
-  height: 32,
-  objectFit: 'contain',
-  marginBottom: 12,
-});
-
-const NavIconButton = styled(IconButton)({
-  width: 48,
-  height: 40,
-  minHeight: 40,
-  borderRadius: '0 16px 16px 0',
-  padding: 0,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  color: '#5f6368',
-  '&:hover': {
-    backgroundColor: 'rgba(60,64,67,0.08)',
-  },
-  '&.active': {
-    backgroundColor: '#d3e3fd',
-    '& .MuiSvgIcon-root': {
-      color: '#1a73e8',
-    },
-  },
-});
+import Logo from '../img/Email.svg';
 
 const MiniSideBar: React.FC = () => {
   return (
-    <MiniBar>
-      <BrandLogo src={Logo} alt="Email" />
+    <Box className="fixed top-[64px] left-0 w-16 h-[calc(100vh-64px)] bg-white border-r border-[#dadce0] flex flex-col items-center pt-2 box-border z-[1100]">
+      <img src={Logo} alt="Email" className="w-8 h-8 object-contain mb-3" />
       {SIDEBAR_DATA.map((data) => (
         <NavLink key={data.name} to={`${routes.emails.path}/${data.name}`}>
           {({ isActive }) => (
             <Tooltip title={data.title} placement="right" arrow>
-              <NavIconButton className={isActive ? 'active' : ''}>
+              <IconButton
+                className={`w-12 h-10 min-h-10 rounded-r-[16px] p-0 flex items-center justify-center text-[#5f6368] transition-colors ${
+                  isActive
+                    ? 'bg-chips-blue [&_.MuiSvgIcon-root]:text-brand-blue'
+                    : 'hover:bg-[#3c40430d]'
+                }`}
+              >
                 <data.icon style={{ fontSize: 22 }} />
-              </NavIconButton>
+              </IconButton>
             </Tooltip>
           )}
         </NavLink>
       ))}
-    </MiniBar>
+    </Box>
   );
 };
 

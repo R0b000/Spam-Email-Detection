@@ -1,15 +1,15 @@
-import { Box, CircularProgress, Typography } from '@mui/material';
+import { CircularProgress, Typography } from '@mui/material';
 
 const SuspenseLoader: React.FC = () => {
   return (
-    <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
-      <Box textAlign="center">
+    <div className="flex h-screen w-full items-center justify-center">
+      <div className="text-center">
         <CircularProgress />
-        <Typography variant="body1" mt={2}>
+        <Typography variant="body1" className="mt-2">
           Loading...
         </Typography>
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 };
 

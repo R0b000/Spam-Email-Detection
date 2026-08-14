@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Box, List, ListItem, ListItemIcon, ListItemText, styled, Button, Typography } from '@mui/material';
+import { Box, List, ListItemIcon, Button, Typography } from '@mui/material';
 import { SIDEBAR_DATA } from '../config/sidebar.config';
 import { useParams, NavLink } from 'react-router-dom';
 import { routes } from '../Router/routes';
@@ -9,92 +9,6 @@ import { API_URI } from '../Configuration/axios';
 import { useAuth } from '../context/AuthContext';
 import { Add as AddIcon } from '@mui/icons-material';
 import type { Mail } from '../types';
-
-const ComposeButton = styled(Button)({
-  background: '#c2e7ff',
-  color: '#001d35',
-  padding: '16px',
-  borderRadius: '16px',
-  minWidth: '140px',
-  width: '140px',
-  textTransform: 'none',
-  fontSize: '14px',
-  fontWeight: '500',
-  boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-  display: 'flex',
-  justifyContent: 'center',
-  gap: '12px',
-  '&:hover': {
-    background: '#b6dcfb',
-    boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
-  },
-});
-
-const NavList = styled(List)({
-  padding: '8px 0',
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '2px',
-});
-
-const NavItem = styled(Box)({
-  display: 'flex',
-  alignItems: 'center',
-  minHeight: '32px',
-  borderRadius: '0 16px 16px 0',
-  padding: '0 12px 0 0',
-  cursor: 'pointer',
-  fontSize: '14px',
-  fontWeight: 500,
-  color: '#202124',
-  textDecoration: 'none',
-  '&.active': {
-    backgroundColor: '#d3e3fd',
-    fontWeight: 700,
-  },
-  '&:hover': {
-    backgroundColor: 'rgba(60,64,67,0.08)',
-  },
-  '&:hover .nav-title': {
-    fontWeight: 700,
-  },
-});
-
-const NavIcon = styled(ListItemIcon)({
-  minWidth: '48px',
-  paddingLeft: '12px',
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  color: '#001d35',
-  '& .MuiSvgIcon-root': {
-    fontSize: '20px',
-  },
-});
-
-const NavText = styled(Typography)({
-  flex: 1,
-  fontSize: '14px',
-  fontWeight: 500,
-  whiteSpace: 'nowrap',
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-  color: '#202124',
-});
-
-const NavCount = styled(Typography)({
-  fontSize: '12px',
-  color: '#5f6368',
-  fontWeight: 500,
-  marginLeft: 'auto',
-  paddingRight: '8px',
-});
-
-const Container = styled(Box)({
-  padding: '8px 0 0 0',
-  overflowY: 'auto',
-  height: '100%',
-});
 
 const SideBarContent: React.FC = () => {
   const { type = '' } = useParams();
@@ -142,29 +56,44 @@ const SideBarContent: React.FC = () => {
           to={`${routes.emails.path}/${data.name}`}
           style={{ textDecoration: 'none' }}
         >
-          <NavItem className={isActive ? 'active' : ''}>
-            <NavIcon>
-              <data.icon />
-            </NavIcon>
-            <NavText className="nav-title">{data.title}</NavText>
-            {count > 0 && <NavCount>{count}</NavCount>}
-          </NavItem>
+          <Box
+            className={`nav-item group flex items-center min-h-[32px] rounded-r-[16px] pl-0 pr-3 cursor-pointer text-sm font-medium text-gtext text-decoration-none ${
+              isActive ? 'bg-chips-blue font-bold' : 'hover:bg-[#3c40430d]'
+            }`}
+          >
+            <ListItemIcon className="min-w-[48px] pl-[12px] flex items-center justify-center" sx={{ '& .MuiSvgIcon-root': { fontSize: '20px' } }}>
+              <data.icon sx={{ color: '#001d35' }} />
+            </ListItemIcon>
+            <Typography
+              className="nav-title flex-1 text-sm font-medium whitespace-nowrap overflow-hidden text-ellipsis text-gtext group-hover:font-bold"
+            >
+              {data.title}
+            </Typography>
+            {count > 0 && (
+              <Typography className="text-xs text-gsubtext font-medium ml-auto pr-[8px]">
+                {count}
+              </Typography>
+            )}
+          </Box>
         </NavLink>
       );
     });
   };
 
   return (
-    <Container>
-      <Box style={{ padding: '4px 8px 12px 8px' }}>
-        <ComposeButton onClick={onComposeClick}>
-          <AddIcon style={{ fontSize: 28 }} />
+    <Box className="overflow-y-auto h-full">
+      <Box className="p-[4px_8px_12px_8px]">
+        <Button
+          onClick={onComposeClick}
+          className="bg-compose-blue text-[#001d35] font-medium rounded-xl text-sm normal-case w-[140px] h-auto py-4 px-4 flex items-center justify-center gap-3 shadow-[0_1px_3px_rgba(0,0,0,0.2)] hover:bg-[#b6dcfb] hover:shadow-[0_2px_6px_rgba(0,0,0,0.3)]"
+        >
+          <AddIcon sx={{ fontSize: 28 }} />
           Compose
-        </ComposeButton>
+        </Button>
       </Box>
-      <NavList>{renderNavLinks()}</NavList>
+      <List className="p-0 m-0 flex flex-col gap-0.5">{renderNavLinks()}</List>
       <ComposeMail openDialog={openDialog} setOpenDialog={setOpenDialog} />
-    </Container>
+    </Box>
   );
 };
 

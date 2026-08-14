@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Dialog, Box, Typography, styled, InputBase, TextField, Button } from '@mui/material';
+import { Dialog, Box, Typography, InputBase, TextField, Button } from '@mui/material';
 import { Close, DeleteOutlined, AttachFile } from '@mui/icons-material';
 import useApi from '../Helper/useApi';
 import { API_URLS } from '../Manager/Service/api.urls';
@@ -7,123 +7,6 @@ import axios from 'axios';
 import { API_URI } from '../Configuration/axios';
 import { useAuth } from '../context/AuthContext';
 import type { Attachment } from '../types';
-
-const dialogStyle: React.CSSProperties = {
-  height: '90%',
-  width: '60%',
-  maxWidth: '600px',
-  maxHeight: '600px',
-  boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-  borderRadius: '10px',
-  backgroundColor: '#fff',
-  padding: '20px',
-  overflow: 'auto',
-};
-
-const Header = styled(Box)({
-  display: 'flex',
-  justifyContent: 'space-between',
-  padding: '10px 15px',
-  background: '#f2f6fc',
-  '& > p': {
-    fontSize: 14,
-    fontWeight: 500,
-  },
-});
-
-const RecipientsWrapper = styled(Box)({
-  display: 'flex',
-  flexDirection: 'column',
-  padding: '0 15px',
-  '& > div': {
-    fontSize: 14,
-    borderBottom: '1px solid #f5f5f5',
-    marginTop: '10px',
-  },
-});
-
-const Footer = styled(Box)({
-  position: 'absolute',
-  bottom: '10px',
-  left: 0,
-  right: 0,
-  display: 'flex',
-  justifyContent: 'space-between',
-  padding: '10px 15px',
-  alignItems: 'center',
-});
-
-const IconWrapper = styled(Box)({
-  display: 'flex',
-});
-
-const SendButton = styled(Button)({
-  background: '#0b57d0',
-  color: '#fff',
-  fontWeight: 500,
-  textTransform: 'none',
-  borderRadius: '18px',
-  width: '100px',
-});
-
-const StyledInputBase = styled(InputBase)({
-  fontSize: '14px',
-  padding: '8px 12px',
-  marginBottom: '10px',
-  border: 'none',
-  borderRadius: '4px',
-  '&:focus': {
-    borderColor: '#80bdff',
-    boxShadow: '0 0 0 0.2rem rgba(0, 123, 255, 0.25)',
-  },
-});
-
-const StyledTextField = styled(TextField)({
-  marginBottom: '10px',
-  '& .MuiOutlinedInput-root': {
-    '& fieldset': {
-      borderColor: 'transparent',
-    },
-    '&:hover fieldset': {
-      borderColor: 'transparent',
-    },
-    '&.Mui-focused fieldset': {
-      borderColor: 'transparent',
-    },
-  },
-});
-
-const StyledAttachmentContainer = styled('div')({
-  border: '1px solid #ccc',
-  borderRadius: '4px',
-  padding: '5px',
-  marginBottom: 'none',
-  position: 'absolute',
-  bottom: '65px',
-  maxWidth: '100%',
-  width: '91.3%',
-  zIndex: '1',
-  fontSize: '14px',
-  lineHeight: '1.2',
-  maxHeight: '133.5px',
-  overflowY: 'auto',
-  '& p': {
-    marginBottom: '3px',
-  },
-  '& img': {
-    maxWidth: '100%',
-    maxHeight: '100px',
-    marginBottom: '3px',
-  },
-  '& a': {
-    color: '#007bff',
-    textDecoration: 'none',
-    cursor: 'pointer',
-  },
-  '& a:hover': {
-    textDecoration: 'underline',
-  },
-});
 
 interface ComposeMailProps {
   openDialog: boolean;
@@ -315,63 +198,94 @@ const ComposeMail = ({ openDialog, setOpenDialog }: ComposeMailProps) => {
   const renderAttachment = () => {
     if (attachment && attachment.name && attachment.type && attachment.content) {
       return (
-        <StyledAttachmentContainer>
-          <p>Attached File: {attachment.name}</p>
-          <p>File Type: {attachment.type}</p>
+        <div className="border border-[#ccc] rounded-[4px] p-1 max-w-full w-[91.3%] z-[1] text-sm leading-[1.2] max-h-[133.5px] overflow-y-auto mb-0 absolute bottom-[65px] left-0 right-0">
+          <p className="mb-[3px]">Attached File: {attachment.name}</p>
+          <p className="mb-[3px]">File Type: {attachment.type}</p>
           {attachment.type.startsWith('image') ? (
-            <img src={`data:${attachment.type};base64,${attachment.content}`} alt={attachment.name} />
+            <img src={`data:${attachment.type};base64,${attachment.content}`} alt={attachment.name} className="max-w-full max-h-[100px] mb-[3px]" />
           ) : (
-            <a href={`data:${attachment.type};base64,${attachment.content}`} download={attachment.name}>
+            <a href={`data:${attachment.type};base64,${attachment.content}`} download={attachment.name} className="text-[#007bff] text-decoration-none cursor-pointer hover:underline">
               Download {attachment.name}
             </a>
           )}
           <div>
             <Button onClick={handleRemoveAttachment}>Remove Attachment</Button>
           </div>
-        </StyledAttachmentContainer>
+        </div>
       );
     }
     return null;
   };
 
   return (
-    <Dialog open={openDialog} PaperProps={{ sx: dialogStyle }}>
-      <Header>
+    <Dialog
+      open={openDialog}
+      PaperProps={{
+        sx: {
+          height: '90%',
+          width: '60%',
+          maxWidth: '600px',
+          maxHeight: '600px',
+          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+          borderRadius: '10px',
+          backgroundColor: '#fff',
+          padding: '20px',
+          overflow: 'auto',
+        },
+      }}
+    >
+      <Box className="flex justify-between items-center p-[10px_15px] bg-[#f2f6fc] [&>p]:text-[14px] [&>p]:font-medium">
         <Typography>New Message</Typography>
         <Close fontSize="small" onClick={(e) => closeComposeMail(e)} />
-      </Header>
-      <RecipientsWrapper>
-        <StyledInputBase placeholder="Recipients" name="to" onChange={(e) => onValueChange(e, 'to')} />
-        <StyledInputBase placeholder="Subject" name="subject" onChange={(e) => onValueChange(e, 'subject')} />
-      </RecipientsWrapper>
-      <StyledTextField
+      </Box>
+      <Box className="flex flex-col p-[0_15px] [&>div]:text-[14px] [&>div]:border-b [&>div]:border-[#f5f5f5] [&>div]:mt-[10px]">
+        <InputBase
+          placeholder="Recipients"
+          name="to"
+          onChange={(e) => onValueChange(e, 'to')}
+          className="text-[14px] p-[8px_12px] mb-[10px] border-none rounded-[4px] focus:border-[#80bdff] focus:ring-2 focus:ring-[rgba(0,123,255,0.25)]"
+        />
+        <InputBase
+          placeholder="Subject"
+          name="subject"
+          onChange={(e) => onValueChange(e, 'subject')}
+          className="text-[14px] p-[8px_12px] mb-[10px] border-none rounded-[4px] focus:border-[#80bdff] focus:ring-2 focus:ring-[rgba(0,123,255,0.25)]"
+        />
+      </Box>
+      <TextField
         multiline
         rows={attachment ? 8 : 14}
+        onChange={(e) => onValueChange(e, 'body')}
+        className="mb-[10px]"
         sx={{
           '& .MuiOutlinedInput-notchedOutline': {
             border: 'none',
           },
         }}
-        onChange={(e) => onValueChange(e, 'body')}
       />
 
       {renderAttachment()}
 
-      <Footer>
-        <IconWrapper>
+      <Box className="absolute bottom-[10px] left-0 right-0 flex justify-between items-center p-[10px_15px]">
+        <Box className="flex">
           {sendingMessage ? (
             <Typography variant="body2" color="textSecondary">
               Sending...
             </Typography>
           ) : (
-            <SendButton onClick={(e) => sendMail(data)}>Send</SendButton>
+            <Button
+              onClick={(e) => sendMail(data)}
+              className="bg-[#0b57d0] text-white font-medium text-none rounded-[18px] w-[100px] normal-case"
+            >
+              Send
+            </Button>
           )}
-        </IconWrapper>
-        <IconWrapper>
+        </Box>
+        <Box className="flex">
           <AttachFile onClick={handleAttachFileClick} />
           <DeleteOutlined onClick={handleDelete} />
-        </IconWrapper>
-      </Footer>
+        </Box>
+      </Box>
     </Dialog>
   );
 };

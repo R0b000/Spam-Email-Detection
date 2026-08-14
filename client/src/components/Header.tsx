@@ -1,56 +1,9 @@
 import React, { useState } from 'react';
-import { AppBar, Toolbar, styled, Box, InputBase, IconButton, Avatar, Badge } from '@mui/material';
+import { AppBar, Toolbar, Box, InputBase, IconButton, Avatar, Badge } from '@mui/material';
 import { Menu as MenuIcon, Search, Tune, HelpOutline, SettingsOutlined, AppsOutlined } from '@mui/icons-material';
-import Logo from '../img/logo.png';
+import Logo from '../img/Email.svg';
 import Profile from './Profile';
 import { useAuth } from '../context/AuthContext';
-
-const StyledAppBar = styled(AppBar)({
-  background: '#ffffff',
-  boxShadow: 'none',
-  borderBottom: '1px solid #dadce0',
-  position: 'fixed',
-  width: '100%',
-  zIndex: 1200,
-});
-
-const SearchWrapper = styled(Box)({
-  flex: 1,
-  maxWidth: '720px',
-  background: '#eaf1fb',
-  borderRadius: '24px',
-  display: 'flex',
-  alignItems: 'center',
-  padding: '0 16px',
-  height: '48px',
-  minHeight: '48px',
-  transition: 'background-color 0.2s, box-shadow 0.2s',
-  '&:focus-within': {
-    background: '#ffffff',
-    boxShadow: '0 1px 1px 0 rgba(65,69,73,0.3), 0 1px 3px 1px rgba(65,69,73,0.15)',
-  },
-});
-
-const SearchInput = styled(InputBase)({
-  flex: 1,
-  marginLeft: '12px',
-  fontSize: '16px',
-  color: '#202124',
-});
-
-const AvatarButton = styled(IconButton)({
-  padding: 8,
-});
-
-const UserAvatar = styled(Avatar)({
-  width: 32,
-  height: 32,
-  background: '#f3733b',
-  color: '#fff',
-  fontSize: '16px',
-  fontWeight: 500,
-  cursor: 'pointer',
-});
 
 interface HeaderProps {
   toggleDrawer: () => void;
@@ -66,42 +19,37 @@ const Header = ({ toggleDrawer }: HeaderProps) => {
 
   return (
     <Box>
-      <StyledAppBar>
-        <Toolbar style={{ minHeight: 64, gap: '4px', display: 'flex' }}>
+      <AppBar className="bg-white shadow-none border-b border-[#dadce0] fixed w-full z-[1200]">
+        <Toolbar className="min-h-[64px] h-[64px] flex gap-[4px]">
           {/* Left: menu + logo */}
-          <Box style={{ display: 'flex', alignItems: 'center', flex: '0 0 auto' }}>
+          <Box className="flex items-center flex-none">
             <IconButton onClick={toggleDrawer}>
               <MenuIcon color="action" />
             </IconButton>
             <img
               src={Logo}
               alt="logo"
-              style={{ width: 32, height: 32, margin: '0 4px 0 8px', objectFit: 'contain' }}
+              className="w-8 h-8 m-[0_4px_0_8px] object-contain"
             />
-            <p
-              style={{
-                color: '#5f6368',
-                fontSize: '22px',
-                fontWeight: 400,
-                margin: 0,
-                paddingTop: 2,
-              }}
-            >
+            <p className="m-0 text-[22px] font-normal text-gsubtext pt-[2px]">
               Email
             </p>
           </Box>
 
           {/* Center: search */}
-          <Box style={{ flex: 1, display: 'flex', justifyContent: 'center', padding: '0 16px' }}>
-            <SearchWrapper>
+          <Box className="flex-1 flex justify-center px-4">
+            <div className="flex-1 max-w-[720px] bg-[#eaf1fb] rounded-[24px] flex items-center px-4 h-12 min-h-12 transition-all duration-200 focus-within:bg-white focus-within:shadow-[0_1px_1px_rgba(65,69,73,0.3),_0_1px_3px_1px_rgba(65,69,73,0.15)]">
               <Search color="action" />
-              <SearchInput placeholder="Search mail" />
+              <InputBase
+                placeholder="Search mail"
+                className="flex-1 ml-3 text-base text-gtext"
+              />
               <Tune color="action" />
-            </SearchWrapper>
+            </div>
           </Box>
 
           {/* Right: icons + avatar */}
-          <Box style={{ display: 'flex', alignItems: 'center', gap: '4px', flex: '0 0 auto' }}>
+          <Box className="flex items-center gap-[4px] flex-none">
             <IconButton>
               <HelpOutline color="action" />
             </IconButton>
@@ -111,14 +59,16 @@ const Header = ({ toggleDrawer }: HeaderProps) => {
             <IconButton>
               <AppsOutlined color="action" />
             </IconButton>
-            <AvatarButton onClick={onUserClick} style={{ marginLeft: 4 }}>
+            <IconButton onClick={onUserClick} className="ml-1 p-2">
               <Badge color="success" variant="dot" overlap="circular" anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}>
-                <UserAvatar>{initial}</UserAvatar>
+                <Avatar className="w-8 h-8 bg-[#f3733b] text-white text-[16px] font-medium cursor-pointer">
+                  {initial}
+                </Avatar>
               </Badge>
-            </AvatarButton>
+            </IconButton>
           </Box>
         </Toolbar>
-      </StyledAppBar>
+      </AppBar>
       <Profile open={openDialog} onClose={handleCloseDialog} />
     </Box>
   );

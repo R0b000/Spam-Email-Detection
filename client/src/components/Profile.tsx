@@ -1,27 +1,8 @@
 import React, { useState } from 'react';
-import { Dialog, Button, styled } from '@mui/material';
+import { Dialog, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { authController } from '../Manager/Controller/authController';
 import { useAuth } from '../context/AuthContext';
-
-// Define styled components
-const ProfileContainer = styled('div')({
-  padding: '20px',
-});
-
-const Username = styled('span')({
-  fontWeight: 'bold',
-  color: '#007bff', // Blue color
-});
-
-const EmailStyled = styled('span')({
-  color: '#28a745', // Green color
-});
-
-const ErrorMessage = styled('p')({
-  color: 'red',
-  marginTop: '10px',
-});
 
 interface ProfileProps {
   open: boolean;
@@ -66,27 +47,26 @@ const Profile = ({ open, onClose }: ProfileProps) => {
 
   return (
     <Dialog open={open} onClose={onClose}>
-      <ProfileContainer>
-        <h2>User Profile</h2>
+      <div className="p-5">
+        <h2 className="m-0 mb-3">User Profile</h2>
         {userName && (
-          <p>
-            Welcome, <Username>{userName}</Username>
+          <p className="m-0 mb-2">
+            Welcome, <span className="font-bold text-brand-blue">{userName}</span>
           </p>
         )}
         {userEmail && (
-          <p>
-            Email: <EmailStyled>{userEmail}</EmailStyled>
+          <p className="m-0 mb-4">
+            Email: <span className="text-green-600">{userEmail}</span>
           </p>
         )}
-        {/* Add more profile details or form for editing */}
-        <Button onClick={onClose} color="primary">
+        <Button onClick={onClose} color="primary" className="mr-2">
           Close
         </Button>
         <Button onClick={handleLogout} color="primary" disabled={loading}>
           Logout
         </Button>
-        {error && <ErrorMessage>{error}</ErrorMessage>}
-      </ProfileContainer>
+        {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+      </div>
     </Dialog>
   );
 };

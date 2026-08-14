@@ -1,93 +1,10 @@
-import { Box, Checkbox, styled } from '@mui/material';
+import { Box, Checkbox } from '@mui/material';
 import { StarBorder, Star } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import useApi from '../Helper/useApi';
 import { API_URLS } from '../Manager/Service/api.urls';
 import { routes } from '../Router/routes';
 import type { Mail } from '../types';
-
-const Wrapper = styled(Box)({
-  display: 'flex',
-  alignItems: 'center',
-  minHeight: '40px',
-  padding: '0 10px',
-  cursor: 'pointer',
-  background: '#ffffff',
-  borderBottom: '1px solid #e8eaed',
-  boxSizing: 'border-box',
-  '&:hover': {
-    boxShadow: 'inset 1px 0 0 #dadce0, inset -1px 0 0 #dadce0, 0 1px 2px rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15)',
-    zIndex: 2,
-  },
-  '&:hover .row-actions': {
-    opacity: 1,
-  },
-  '& .row-actions': {
-    opacity: 0,
-    transition: 'opacity 0.2s',
-  },
-});
-
-const ActionCheckbox = styled(Checkbox)({
-  padding: 4,
-  marginRight: 4,
-  '&.Mui-checked': {
-    opacity: 1,
-  },
-});
-
-const ActionStar = styled('div')({
-  display: 'flex',
-  alignItems: 'center',
-  color: '#5f6368',
-  '& .MuiSvgIcon-root': {
-    fontSize: '20px',
-  },
-});
-
-const Sender = styled(Box)({
-  minWidth: '180px',
-  maxWidth: '230px',
-  width: '22%',
-  fontSize: '14px',
-  fontWeight: 700,
-  color: '#202124',
-  whiteSpace: 'nowrap',
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-  paddingRight: '8px',
-});
-
-const Content = styled(Box)({
-  flex: 1,
-  display: 'flex',
-  alignItems: 'center',
-  whiteSpace: 'nowrap',
-  overflow: 'hidden',
-  fontSize: '14px',
-  color: '#5f6368',
-});
-
-const SubjectText = styled('span')({
-  fontWeight: 700,
-  color: '#202124',
-  whiteSpace: 'nowrap',
-});
-
-const BodyPreview = styled('span')({
-  color: '#5f6368',
-  whiteSpace: 'nowrap',
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-});
-
-const DateText = styled(Box)({
-  fontSize: '12px',
-  color: '#5f6368',
-  marginLeft: 'auto',
-  paddingLeft: '12px',
-  whiteSpace: 'nowrap',
-});
 
 interface EmailProps {
   email: Mail;
@@ -130,26 +47,43 @@ const Email = ({ email, starred, selectedEmails, setSelectedEmails, refreshList 
   const month = formattedDate.toLocaleString('default', { month: 'short' });
 
   return (
-    <Wrapper onClick={handleEmailClick}>
-      <Box className="row-actions" style={{ display: 'flex', alignItems: 'center' }}>
-        <ActionCheckbox size="small" checked={isSelected} onChange={handleChange} onClick={(e) => e.stopPropagation()} />
-        <ActionStar onClick={toggleStarredEmail} style={{ cursor: 'pointer' }}>
+    <Box
+      className="group flex items-center min-h-[40px] px-[0_10px] cursor-pointer bg-white border-b border-[#e8eaed] box-border hover:shadow-[inset_1px_0_0_#dadce0,_inset_-1px_0_0_#dadce0,_0_1px_2px_rgba(60,64,67,0.3),_0_1px_3px_1px_rgba(60,64,67,0.15)] hover:z-[2]"
+      onClick={handleEmailClick}
+    >
+      <Box className="row-actions flex items-center opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+        <Checkbox
+          size="small"
+          checked={isSelected}
+          onChange={handleChange}
+          onClick={(e) => e.stopPropagation()}
+          className="p-1 mr-1 [&.Mui-checked]:opacity-100"
+        />
+        <div
+          className="flex items-center justify-center cursor-pointer text-[#5f6368] [&_.MuiSvgIcon-root]:text-[20px]"
+          onClick={toggleStarredEmail}
+        >
           {starred ? <Star style={{ color: '#f7cb4d' }} /> : <StarBorder />}
-        </ActionStar>
+        </div>
       </Box>
 
-      <Sender title={receiverEmail || ''}>{receiverEmail || ''}</Sender>
+      <Box
+        className="min-w-[180px] max-w-[230px] w-[22%] text-[14px] font-bold text-gtext whitespace-nowrap overflow-hidden text-ellipsis pr-[8px]"
+        title={receiverEmail || ''}
+      >
+        {receiverEmail || ''}
+      </Box>
 
-      <Content>
-        {subject && <SubjectText>{subject}</SubjectText>}
+      <Box className="flex-1 flex items-center whitespace-nowrap overflow-hidden text-[14px] text-gsubtext">
+        {subject && <span className="font-bold text-gtext whitespace-nowrap">{subject}</span>}
         {subject && body ? <span>&nbsp;-&nbsp;</span> : null}
-        {body && <BodyPreview>{body}</BodyPreview>}
-      </Content>
+        {body && <span className="whitespace-nowrap overflow-hidden text-ellipsis">{body}</span>}
+      </Box>
 
-      <DateText>
+      <Box className="text-[12px] text-gsubtext ml-auto pl-[12px] whitespace-nowrap">
         {day} {month}
-      </DateText>
-    </Wrapper>
+      </Box>
+    </Box>
   );
 };
 

@@ -29,7 +29,7 @@ const AuthLayout: React.FC = () => {
           transform: rotate(25deg);
         }
       `}</style>
-      <div className="gauth-bg">
+      <div className="gauth-bg flex flex-col items-center">
         <Suspense fallback={<Loader />}>
           <Outlet />
         </Suspense>

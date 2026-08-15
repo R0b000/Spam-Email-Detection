@@ -4,6 +4,7 @@ import EmailLayout from '../../pages/Email/EmailLayout';
 import EmailPage from '../../pages/Email/EmailPage';
 import EmailViewPage from '../../pages/Email/EmailViewPage';
 import ProtectedRoute from '../../Utility/ProtectedRoute';
+import Home from '../../pages/Home/Home';
 
 const EmailListPage = lazy(() => import('../../pages/Email/EmailPage'));
 const EmailView = lazy(() => import('../../pages/Email/EmailViewPage'));
@@ -11,6 +12,10 @@ const EmailView = lazy(() => import('../../pages/Email/EmailViewPage'));
 const EmailRoute: RouteObject[] = [
   {
     path: '/',
+    element: <Home />,
+  },
+  {
+    path: '/emails',
     element: (
       <ProtectedRoute>
         <EmailLayout />
@@ -18,7 +23,7 @@ const EmailRoute: RouteObject[] = [
     ),
     children: [
       { index: true, element: <EmailListPage /> },
-      { path: 'emails/:type', element: <EmailListPage /> },
+      { path: ':type', element: <EmailListPage /> },
       { path: 'view', element: <EmailView /> },
     ],
   },

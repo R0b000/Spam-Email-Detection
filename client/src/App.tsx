@@ -2,12 +2,13 @@ import React, { Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import AuthRoute from './Manager/Route/AuthRoute';
 import EmailRoute from './Manager/Route/EmailRoute';
-import SuspenseLoader from './components/common/SuspenseLoader';
+import NotFound from './pages/NotFound/NotFound';
+import Loader from './components/Loader/Loader';
 
 const App: React.FC = () => {
   return (
     <BrowserRouter>
-      <Suspense fallback={<SuspenseLoader />}>
+      <Suspense fallback={<Loader />}>
         <Routes>
           {/* Auth routes */}
           {AuthRoute.map((route, idx) => (
@@ -32,7 +33,7 @@ const App: React.FC = () => {
           ))}
 
           {/* Catch-all */}
-          <Route path="*" element={<Navigate to="/emails/inbox" replace />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
     </BrowserRouter>

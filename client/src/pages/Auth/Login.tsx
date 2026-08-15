@@ -118,7 +118,7 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="relative z-10 w-full max-w-[452px] rounded-lg border border-gborder bg-white px-10 pb-9 text-center">
+    <div className="relative z-10 w-full max-w-[452px] rounded-lg border border-gborder bg-white px-10 pb-9 pt-[46px] text-center shadow-sm">
       {step === 'email' ? (
         <>
           <img src={Logo} alt="Email logo" className="mx-auto mb-3.5 block h-[72px] w-[72px] object-contain" />

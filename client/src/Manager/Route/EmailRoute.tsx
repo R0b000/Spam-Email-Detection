@@ -3,7 +3,7 @@ import { RouteObject } from 'react-router-dom';
 import EmailLayout from '../../pages/Email/EmailLayout';
 import EmailPage from '../../pages/Email/EmailPage';
 import EmailViewPage from '../../pages/Email/EmailViewPage';
-import ProtectedRoute from '../../components/ProtectedRoute';
+import ProtectedRoute from '../../Utility/ProtectedRoute';
 
 const EmailListPage = lazy(() => import('../../pages/Email/EmailPage'));
 const EmailView = lazy(() => import('../../pages/Email/EmailViewPage'));

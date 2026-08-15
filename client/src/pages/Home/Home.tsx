@@ -1,11 +1,24 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import Logo from '../../img/Email.svg';
+import React, { useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 const Home: React.FC = () => {
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/emails/inbox', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
+
+  if (isAuthenticated) {
+    return null;
+  }
+
   return (
     <div className="relative z-10 flex min-h-screen flex-col items-center justify-center bg-white px-6 text-center">
-      <img src={Logo} alt="Email logo" className="mx-auto mb-8 block h-24 w-24 object-contain" />
+      <img src="/email.svg" alt="Email logo" className="mx-auto mb-8 block h-24 w-24 object-contain" />
       <h1 className="mb-3 text-4xl font-normal text-gtext">Welcome to Email</h1>
       <p className="mx-auto mb-10 max-w-xl text-base text-gsubtext">
         A fast, secure, and intelligent email experience. Manage your inbox, stay organized, and connect with confidence.
@@ -42,18 +55,8 @@ const Home: React.FC = () => {
       </div>
 
       <div className="mt-10 flex gap-4">
-        <Link
-          to="/auth/login"
-          className="inline-flex h-11 items-center justify-center rounded bg-brand-blue px-6 text-sm font-semibold text-white hover:bg-brand-blue-dark"
-        >
-          Sign in
-        </Link>
-        <Link
-          to="/auth/register"
-          className="inline-flex h-11 items-center justify-center rounded border border-gborder px-6 text-sm font-semibold text-brand-blue hover:bg-blue-50"
-        >
-          Create account
-        </Link>
+        <Link to="/auth/login" className="inline-flex h-11 items-center justify-center rounded bg-brand-blue px-6 text-sm font-semibold text-white hover:bg-brand-blue-dark">Sign in</Link>
+        <Link to="/auth/register" className="inline-flex h-11 items-center justify-center rounded border border-gborder px-6 text-sm font-semibold text-brand-blue hover:bg-blue-50">Create account</Link>
       </div>
     </div>
   );

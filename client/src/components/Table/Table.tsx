@@ -16,6 +16,7 @@ interface TableProps<T> {
 }
 
 function Table<T>({ columns, rows, keyExtractor, onRowClick }: TableProps<T>) {
+  const safeRows = Array.isArray(rows) ? rows.filter(Boolean) : [];
   return (
     <TableContainer component={Paper} className="border border-gborder">
       <MuiTable size="small">
@@ -29,27 +30,30 @@ function Table<T>({ columns, rows, keyExtractor, onRowClick }: TableProps<T>) {
           </TableRow>
         </TableHead>
         <TableBody>
-          {rows.length === 0 ? (
+          {safeRows.length === 0 ? (
             <TableRow>
               <TableCell colSpan={columns.length} className="text-center text-gsubtext py-8">
                 No data available
               </TableCell>
             </TableRow>
           ) : (
-            rows.map((row) => (
-              <TableRow
-                key={keyExtractor(row)}
-                hover
-                onClick={() => onRowClick?.(row)}
-                className={onRowClick ? 'cursor-pointer' : ''}
-              >
-                {columns.map((col) => (
-                  <TableCell key={String(col.id)} align={col.align || 'left'}>
-                    {col.render ? col.render(row) : String(row[col.id as keyof T] ?? '')}
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))
+            safeRows.map((row) => {
+              const key = keyExtractor(row) ?? Math.random();
+              return (
+                <TableRow
+                  key={key}
+                  hover
+                  onClick={() => onRowClick?.(row)}
+                  className={onRowClick ? 'cursor-pointer' : ''}
+                >
+                  {columns.map((col) => (
+                    <TableCell key={String(col.id)} align={col.align || 'left'}>
+                      {col.render ? col.render(row) : String(row[col.id as keyof T] ?? '')}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              );
+            })
           )}
         </TableBody>
       </MuiTable>

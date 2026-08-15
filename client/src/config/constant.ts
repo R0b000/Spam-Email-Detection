@@ -34,4 +34,8 @@ export const EMPTY_TABS: Record<string, EmptyTab> = {
     heading: 'No conversations in Spam.',
     subHeading: '',
   },
+  allmail: {
+    heading: 'No mail here.',
+    subHeading: '',
+  },
 };

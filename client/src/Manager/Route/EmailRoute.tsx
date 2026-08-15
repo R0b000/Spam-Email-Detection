@@ -1,5 +1,6 @@
 import React, { lazy } from 'react';
 import { RouteObject } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import EmailLayout from '../../pages/Email/EmailLayout';
 import EmailPage from '../../pages/Email/EmailPage';
 import EmailViewPage from '../../pages/Email/EmailViewPage';
@@ -15,6 +16,10 @@ const EmailRoute: RouteObject[] = [
     element: <Home />,
   },
   {
+    path: '/home',
+    element: <Home />,
+  },
+  {
     path: '/emails',
     element: (
       <ProtectedRoute>
@@ -22,7 +27,7 @@ const EmailRoute: RouteObject[] = [
       </ProtectedRoute>
     ),
     children: [
-      { index: true, element: <EmailListPage /> },
+      { index: true, element: <Navigate to="inbox" replace /> },
       { path: ':type', element: <EmailListPage /> },
       { path: 'view', element: <EmailView /> },
     ],

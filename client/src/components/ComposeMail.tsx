@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
 import { Dialog, Box, Typography, InputBase, TextField, Button } from '@mui/material';
 import { Close, DeleteOutlined, AttachFile } from '@mui/icons-material';
-import useApi from '../Helper/useApi';
 import { API_URLS } from '../Manager/Service/api.urls';
-import axios from 'axios';
-import { API_URI } from '../Configuration/axios';
+import httpClient from '../Configuration/axios';
 import { useAuth } from '../context/AuthContext';
 import type { Attachment, SpamDetectionResponse } from '../Model/ResponseModel/EmailModel/EmailResponseModel';
-import type { EmailContent, SendEmailRequest, SaveDraftRequest, SaveSpamRequest, SpamDetectionRequest } from '../Model/RequestModel/EmailModel/EmailRequestModel';
+import type { EmailContent, SendEmailRequest, SaveDraftRequest, SaveSpamRequest } from '../Model/RequestModel/EmailModel/EmailRequestModel';
 
 interface ComposeMailProps {
   openDialog: boolean;
@@ -25,10 +23,6 @@ const ComposeMail = ({ openDialog, setOpenDialog }: ComposeMailProps) => {
   const [sendingMessage, setSendingMessage] = useState(false);
   const [attachment, setAttachment] = useState<Attachment | null>(null);
   const [data, setData] = useState<ComposeData>({ to: '', subject: '', body: '' });
-
-  const sendMessageServices = useApi(API_URLS.savesendEmails);
-  const saveDraftService = useApi(API_URLS.saveDraftEmails);
-  const saveSpamServices = useApi(API_URLS.saveSpamEmails);
 
   const { user } = useAuth();
   const userEmail = user?.email ?? null;
@@ -54,7 +48,7 @@ const ComposeMail = ({ openDialog, setOpenDialog }: ComposeMailProps) => {
     try {
       setSendingMessage(true);
 
-      const spamDetectionResponse = await axios.post<SpamDetectionResponse>(`${API_URI}/detect`, {
+      const spamDetectionResponse = await httpClient.post<SpamDetectionResponse>('/detect', {
         emailSubject: formData.subject,
         emailBody: formData.body,
       });
@@ -97,16 +91,11 @@ const ComposeMail = ({ openDialog, setOpenDialog }: ComposeMailProps) => {
 
         if (isSpam) {
           const spamPayload: SaveSpamRequest = { ...payload, type: 'spam' };
-          await saveSpamServices.call(spamPayload);
-          alert(saveSpamServices.data?.message);
+          const spamRes = await httpClient.post(API_URLS.saveSpamEmails.endpoint, spamPayload);
+          alert(spamRes.data.message);
         } else {
-          await sendMessageServices.call(payload);
-          if (sendMessageServices.data) {
-            alert(sendMessageServices.data.message);
-          } else {
-            console.error('Error sending message:', sendMessageServices.error);
-            alert('Failed to send email. Please try again.');
-          }
+          const sendRes = await httpClient.post(API_URLS.savesendEmails.endpoint, payload);
+          alert(sendRes.data.message);
         }
       } else {
         console.error('No prediction found in Python output:', output);
@@ -122,30 +111,30 @@ const ComposeMail = ({ openDialog, setOpenDialog }: ComposeMailProps) => {
   const closeComposeMail = async (e: React.MouseEvent) => {
     e.preventDefault();
 
-    try {
-      const payload: SaveDraftRequest = {
-        senderId: userEmail ?? '',
-        receiverEmail: data.to || null,
-        content: Object.keys(buildEmailContent()).length > 0 ? buildEmailContent() : null,
-        name: userName ?? '',
-        date: new Date().toISOString(),
-        starred: false,
-        bin: false,
-        type: 'draft',
-      };
+      try {
+        const payload: SaveDraftRequest = {
+          senderId: userEmail ?? '',
+          receiverEmail: data.to || null,
+          content: Object.keys(buildEmailContent()).length > 0 ? buildEmailContent() : null,
+          name: userName ?? '',
+          date: new Date().toISOString(),
+          starred: false,
+          bin: false,
+          type: 'draft',
+        };
 
-      saveDraftService.call(payload);
+        const draftRes = await httpClient.post(API_URLS.saveDraftEmails.endpoint, payload);
 
-      if (saveDraftService.status === 200) {
-        alert(saveDraftService.data?.message);
-        setData({ to: '', subject: '', body: '' });
-        setAttachment(null);
+        if (draftRes.status === 200) {
+          alert(draftRes.data.message);
+          setData({ to: '', subject: '', body: '' });
+          setAttachment(null);
+        }
+      } catch (error: any) {
+        console.error('Error saving draft:', error.message);
+        alert('Invalid Email. Please try again.');
       }
-    } catch (error: any) {
-      console.error('Error sending message:', error.message);
-      alert('Invalid Email. Please try again.');
-    }
-    setOpenDialog(false);
+      setOpenDialog(false);
   };
 
   const handleAttachFileClick = () => {

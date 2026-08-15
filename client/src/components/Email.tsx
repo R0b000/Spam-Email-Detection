@@ -1,9 +1,8 @@
 import { Box, Checkbox } from '@mui/material';
 import { StarBorder, Star } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import useApi from '../Helper/useApi';
 import { API_URLS } from '../Manager/Service/api.urls';
-import { routes } from '../Router/routes';
+import httpClient from '../Configuration/axios';
 import type { Mail } from '../Model/ResponseModel/EmailModel/EmailResponseModel';
 
 interface EmailProps {
@@ -16,14 +15,13 @@ interface EmailProps {
 
 const Email = ({ email, starred, selectedEmails, setSelectedEmails, refreshList }: EmailProps) => {
   const { _id, receiverEmail, subject, body, date } = email;
-  const toggleStarredEmailService = useApi(API_URLS.toggleStarredMails);
   const navigate = useNavigate();
   const isSelected = selectedEmails.includes(_id);
 
   const toggleStarredEmail = async (e: React.MouseEvent) => {
     e.stopPropagation();
     try {
-      await toggleStarredEmailService.call({ id: _id, value: !starred });
+      await httpClient.put(API_URLS.toggleStarredMails.endpoint, { id: _id, value: !starred });
       refreshList?.();
     } catch (error) {
       console.error('Error toggling starred email:', error);
@@ -31,7 +29,7 @@ const Email = ({ email, starred, selectedEmails, setSelectedEmails, refreshList 
   };
 
   const handleEmailClick = () => {
-    navigate(routes.view.path, { state: { email } });
+    navigate('/view', { state: { email } });
   };
 
   const handleChange = () => {

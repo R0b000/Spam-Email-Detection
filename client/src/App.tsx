@@ -1,59 +1,38 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import Signup from './pages/Signup';
-import Login from './pages/Login';
-import Main from './pages/Main';
-import { routes } from './Router/routes';
-import Emails from './components/Emails';
-import ViewEmail from './components/ViewEmail';
-import Email from './components/Email';
-import ProtectedRoute from './components/ProtectedRoute';
+import AuthRoute from './Manager/Route/AuthRoute';
+import EmailRoute from './Manager/Route/EmailRoute';
 import SuspenseLoader from './components/common/SuspenseLoader';
-
-const ErrorComponent = lazy(() => import('./components/common/ErrorComponent'));
 
 const App: React.FC = () => {
   return (
     <BrowserRouter>
       <Suspense fallback={<SuspenseLoader />}>
         <Routes>
-          {/* Register and login routes */}
-          <Route path="/register" element={<Signup />} />
-          <Route path="/login" element={<Login />} />
+          {/* Auth routes */}
+          {AuthRoute.map((route, idx) => (
+            <Route key={idx} path={route.path} element={route.element}>
+              {route.children?.map((child, childIdx) => (
+                <Route key={childIdx} index={child.index} path={child.path} element={child.element} />
+              ))}
+            </Route>
+          ))}
 
-          {/* Redirect the base route to the inbox */}
-          <Route path={routes.main.path} element={<Navigate to={`${routes.emails.path}/inbox`} />} />
+          {/* Legacy redirects */}
+          <Route path="/login" element={<Navigate to="/auth/login" replace />} />
+          <Route path="/register" element={<Navigate to="/auth/register" replace />} />
 
-          {/* Protected routes - redirect to /login when not authenticated */}
-          <Route
-            path={routes.main.path}
-            element={
-              <ProtectedRoute>
-                <Main />
-              </ProtectedRoute>
-            }
-          >
-            <Route
-              path={`${routes.emails.path}/:type`}
-              element={<routes.emails.element />}
-              errorElement={<ErrorComponent />}
-            />
-            <Route
-              path={routes.view.path}
-              element={<routes.view.element />}
-              errorElement={<ErrorComponent />}
-            />
-          </Route>
+          {/* Email routes */}
+          {EmailRoute.map((route, idx) => (
+            <Route key={idx} path={route.path} element={route.element}>
+              {route.children?.map((child, childIdx) => (
+                <Route key={childIdx} index={child.index} path={child.path} element={child.element} />
+              ))}
+            </Route>
+          ))}
 
-          {/* Define invalid route for deeply nested paths */}
-          <Route
-            path={routes.invalid.path}
-            element={
-              <ProtectedRoute>
-                <Navigate to={`${routes.emails.path}/inbox`} />
-              </ProtectedRoute>
-            }
-          />
+          {/* Catch-all */}
+          <Route path="*" element={<Navigate to="/emails/inbox" replace />} />
         </Routes>
       </Suspense>
     </BrowserRouter>

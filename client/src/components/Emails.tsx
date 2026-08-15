@@ -1,14 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useOutletContext } from 'react-router-dom';
-import axios from 'axios';
 import { Box, Checkbox, IconButton, Typography } from '@mui/material';
 import { DeleteOutline, RefreshOutlined, MoreVertOutlined } from '@mui/icons-material';
 import Email from './Email';
-import useApi from '../Helper/useApi';
 import { API_URLS } from '../Manager/Service/api.urls';
 import NoMails from './common/NoMails';
 import { EMPTY_TABS } from '../config/constant';
-import { API_URI } from '../Configuration/axios';
+import httpClient from '../Configuration/axios';
 import { useAuth } from '../context/AuthContext';
 import type { Mail } from '../Model/ResponseModel/EmailModel/EmailResponseModel';
 import type { MainOutletContext } from '../pages/Main';
@@ -22,7 +20,6 @@ const Emails: React.FC = () => {
   const [emails, setEmails] = useState<Mail[]>([]);
   const [refresh, setRefresh] = useState(false);
   const [selectedEmails, setSelectedEmails] = useState<string[]>([]);
-  const deleteEmailsService = useApi(API_URLS.deleteSelectedEmails);
 
   const { type = '' } = useParams();
   const { openDrawer } = useOutletContext<OutletContext>();
@@ -38,7 +35,7 @@ const Emails: React.FC = () => {
           return;
         }
 
-        const response = await axios.get(`${API_URI}/emails/${type}?userEmail=${userEmail}`);
+        const response = await httpClient.get(`/emails/${type}?userEmail=${userEmail}`);
         const fetchedEmails = response.data as Mail[];
         setEmails(fetchedEmails);
         setSharedEmails(fetchedEmails);
@@ -52,7 +49,7 @@ const Emails: React.FC = () => {
     return () => {
       setSelectedEmails([]);
     };
-  }, [type, refresh, user?.email]);
+  }, [type, refresh, user?.email, setSharedEmails]);
 
   useEffect(() => {
     setSelectedEmails([]);
@@ -69,7 +66,7 @@ const Emails: React.FC = () => {
   const deleteSelectedEmails = async () => {
     try {
       if (selectedEmails.length === 0) return;
-      await deleteEmailsService.call({
+      await httpClient.put(API_URLS.deleteSelectedEmails.endpoint, {
         messageIds: selectedEmails,
         type: 'bin',
         value: true,

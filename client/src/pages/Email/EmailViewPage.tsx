@@ -3,7 +3,6 @@ import { Box, Typography, IconButton } from '@mui/material';
 import { ArrowBack, Delete } from '@mui/icons-material';
 import { useOutletContext, useLocation } from 'react-router-dom';
 import { emptyProfilePic } from '../../config/constant';
-import type { MainOutletContext } from '../../pages/Main';
 import type { Mail } from '../../Model/ResponseModel/EmailModel/EmailResponseModel';
 import type { EmailOutletContext } from './EmailLayout';
 

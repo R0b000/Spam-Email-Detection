@@ -15,16 +15,18 @@ import { useAuth } from '../../context/AuthContext';
 interface OutletContext extends EmailOutletContext {
   openDrawer: boolean;
   sidebarWidth: number;
+  selectedEmails: string[];
+  setSelectedEmails: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
 const EmailPage: React.FC = () => {
   const [emails, setEmails] = useState<Mail[]>([]);
   const [refresh, setRefresh] = useState(false);
-  const [selectedEmails, setSelectedEmails] = useState<string[]>([]);
   const [starredSet, setStarredSet] = useState<Set<string>>(new Set());
 
   const { type = '' } = useParams();
   const { sidebarWidth } = useOutletContext<OutletContext>();
+  const { selectedEmails, setSelectedEmails } = useOutletContext<OutletContext>();
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -50,11 +52,11 @@ const EmailPage: React.FC = () => {
     return () => {
       setSelectedEmails([]);
     };
-  }, [type, refresh, user?.email]);
+  }, [type, refresh, user?.email, setSelectedEmails]);
 
   useEffect(() => {
     setSelectedEmails([]);
-  }, [type]);
+  }, [type, setSelectedEmails]);
 
   const toggleStar = async (email: Mail) => {
     try {

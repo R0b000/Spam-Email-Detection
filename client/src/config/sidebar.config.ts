@@ -2,7 +2,6 @@ import {
   DeleteOutlined,
   DraftsOutlined,
   InboxOutlined,
-  InsertDriveFileOutlined,
   MailOutlined,
   ReportGmailerrorred,
   SendOutlined,

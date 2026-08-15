@@ -4,7 +4,7 @@ import { useOutletContext, useLocation } from 'react-router-dom';
 import { emptyProfilePic } from '../config/constant';
 import { ArrowBack, Delete } from '@mui/icons-material';
 import type { MainOutletContext } from '../pages/Main';
-import type { Mail } from '../types';
+import type { Mail } from '../Model/ResponseModel/EmailModel/EmailResponseModel';
 
 interface ViewEmailState {
   email: Mail;

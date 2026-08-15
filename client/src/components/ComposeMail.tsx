@@ -6,23 +6,30 @@ import { API_URLS } from '../Manager/Service/api.urls';
 import axios from 'axios';
 import { API_URI } from '../Configuration/axios';
 import { useAuth } from '../context/AuthContext';
-import type { Attachment } from '../types';
+import type { Attachment, SpamDetectionResponse } from '../Model/ResponseModel/EmailModel/EmailResponseModel';
+import type { EmailContent, SendEmailRequest, SaveDraftRequest, SaveSpamRequest, SpamDetectionRequest } from '../Model/RequestModel/EmailModel/EmailRequestModel';
 
 interface ComposeMailProps {
   openDialog: boolean;
   setOpenDialog: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
+interface ComposeData {
+  to: string;
+  subject: string;
+  body: string;
+  attachment?: Attachment;
+}
+
 const ComposeMail = ({ openDialog, setOpenDialog }: ComposeMailProps) => {
   const [sendingMessage, setSendingMessage] = useState(false);
   const [attachment, setAttachment] = useState<Attachment | null>(null);
-  const [data, setData] = useState<any>({});
+  const [data, setData] = useState<ComposeData>({ to: '', subject: '', body: '' });
 
   const sendMessageServices = useApi(API_URLS.savesendEmails);
   const saveDraftService = useApi(API_URLS.saveDraftEmails);
   const saveSpamServices = useApi(API_URLS.saveSpamEmails);
 
-  // Use the authenticated user from the shared AuthContext instead of sessionStorage.
   const { user } = useAuth();
   const userEmail = user?.email ?? null;
   const userName = user?.name ?? null;
@@ -35,18 +42,24 @@ const ComposeMail = ({ openDialog, setOpenDialog }: ComposeMailProps) => {
     }
   };
 
-  const sendMail = async (data: any) => {
+  const buildEmailContent = (): EmailContent => {
+    const content: EmailContent = {};
+    if (data.subject) content.subject = data.subject;
+    if (data.body) content.body = data.body;
+    if (attachment) content.attachment = attachment;
+    return content;
+  };
+
+  const sendMail = async (formData: ComposeData) => {
     try {
       setSendingMessage(true);
 
-      // Make API call to detect spam with the subject and body separately
-      const spamDetectionResponse = await axios.post(`${API_URI}/detect`, {
-        emailSubject: data.subject,
-        emailBody: data.body,
+      const spamDetectionResponse = await axios.post<SpamDetectionResponse>(`${API_URI}/detect`, {
+        emailSubject: formData.subject,
+        emailBody: formData.body,
       });
 
-      // Call the function to handle remaining code after receiving response
-      handleResponse(spamDetectionResponse, data, userEmail, userName);
+      handleResponse(spamDetectionResponse, formData, userEmail, userName);
     } catch (error: any) {
       console.error('Error sending message:', error.message);
       alert('Invalid Email. Please try again.');
@@ -59,8 +72,8 @@ const ComposeMail = ({ openDialog, setOpenDialog }: ComposeMailProps) => {
   };
 
   const handleResponse = async (
-    spamDetectionResponse: any,
-    data: any,
+    spamDetectionResponse: { data: SpamDetectionResponse },
+    formData: ComposeData,
     userEmail: string | null,
     userName: string | null
   ) => {
@@ -71,33 +84,22 @@ const ComposeMail = ({ openDialog, setOpenDialog }: ComposeMailProps) => {
         const prediction = output.substring(predictionIndex);
         const isSpam = prediction.includes('classified as SPAM');
 
-        const receiverEmail = data.to;
-
-        const payload = {
-          senderId: userEmail,
-          receiverEmail: receiverEmail,
-          content: {
-            subject: data.subject,
-            body: data.body,
-            attachment: {
-              name: data.attachment?.name,
-              type: data.attachment?.type,
-              content: data.attachment?.content,
-            },
-          },
-          name: userName,
-          date: new Date(),
+        const payload: SendEmailRequest = {
+          senderId: userEmail ?? '',
+          receiverEmail: formData.to,
+          content: buildEmailContent(),
+          name: userName ?? '',
+          date: new Date().toISOString(),
           starred: false,
           bin: false,
           type: isSpam ? 'spam' : 'sent',
         };
 
         if (isSpam) {
-          // Make API call to save spam email
-          await saveSpamServices.call(payload);
+          const spamPayload: SaveSpamRequest = { ...payload, type: 'spam' };
+          await saveSpamServices.call(spamPayload);
           alert(saveSpamServices.data?.message);
         } else {
-          // Send email if not spam
           await sendMessageServices.call(payload);
           if (sendMessageServices.data) {
             alert(sendMessageServices.data.message);
@@ -121,30 +123,12 @@ const ComposeMail = ({ openDialog, setOpenDialog }: ComposeMailProps) => {
     e.preventDefault();
 
     try {
-      const messageContent: Record<string, unknown> = {};
-
-      if (data.subject) {
-        messageContent.subject = data.subject;
-      }
-      if (data.body) {
-        messageContent.body = data.body;
-      }
-      if (attachment) {
-        messageContent.attachment = {
-          name: attachment.name,
-          type: attachment.type,
-          content: attachment.content,
-        };
-      }
-
-      const receiverEmail = data.to || null;
-
-      const payload = {
-        senderId: userEmail,
-        receiverEmail: receiverEmail,
-        content: Object.keys(messageContent).length > 0 ? messageContent : null,
-        name: userName,
-        date: new Date(),
+      const payload: SaveDraftRequest = {
+        senderId: userEmail ?? '',
+        receiverEmail: data.to || null,
+        content: Object.keys(buildEmailContent()).length > 0 ? buildEmailContent() : null,
+        name: userName ?? '',
+        date: new Date().toISOString(),
         starred: false,
         bin: false,
         type: 'draft',
@@ -153,8 +137,8 @@ const ComposeMail = ({ openDialog, setOpenDialog }: ComposeMailProps) => {
       saveDraftService.call(payload);
 
       if (saveDraftService.status === 200) {
-        alert((saveDraftService.data as any)?.message);
-        setData({});
+        alert(saveDraftService.data?.message);
+        setData({ to: '', subject: '', body: '' });
         setAttachment(null);
       }
     } catch (error: any) {
@@ -190,7 +174,7 @@ const ComposeMail = ({ openDialog, setOpenDialog }: ComposeMailProps) => {
   };
 
   const handleDelete = () => {
-    setData({});
+    setData({ to: '', subject: '', body: '' });
     setAttachment(null);
     setOpenDialog(false);
   };

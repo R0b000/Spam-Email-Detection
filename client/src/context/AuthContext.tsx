@@ -1,11 +1,8 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import type { Mail } from '../types';
+import type { Mail } from '../Model/ResponseModel/EmailModel/EmailResponseModel';
+import type { AuthUser } from '../Model/ResponseModel/AuthModel/AuthResponseModel';
 
-// User information coming back from the database (login / register response).
-export interface AuthUser {
-  name: string;
-  email: string;
-}
+export { AuthUser };
 
 // Session storage keys.
 const AUTH_USER_KEY = 'auth_user';

@@ -10,7 +10,7 @@ import NoMails from './common/NoMails';
 import { EMPTY_TABS } from '../config/constant';
 import { API_URI } from '../Configuration/axios';
 import { useAuth } from '../context/AuthContext';
-import type { Mail } from '../types';
+import type { Mail } from '../Model/ResponseModel/EmailModel/EmailResponseModel';
 import type { MainOutletContext } from '../pages/Main';
 
 interface OutletContext extends MainOutletContext {

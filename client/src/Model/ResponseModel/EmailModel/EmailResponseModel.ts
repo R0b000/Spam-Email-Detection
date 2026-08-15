@@ -1,5 +1,3 @@
-// Shared domain types for the email client.
-
 export interface Attachment {
   name?: string;
   type?: string;
@@ -22,4 +20,26 @@ export interface Mail {
   bin: boolean;
   type: string;
   name?: string;
+}
+
+export interface SendEmailResponse {
+  message: string;
+  data: Mail;
+}
+
+export interface SpamDetectionResponse {
+  result: string;
+}
+
+export interface EmailsListResponse {
+  message: string;
+  data: Mail[];
+}
+
+export interface DeleteEmailsResponse {
+  message: string;
+}
+
+export interface ToggleStarredResponse {
+  message: string;
 }

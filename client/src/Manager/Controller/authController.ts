@@ -1,4 +1,6 @@
 import { authService } from '../Service/authService';
+import type { LoginRequest, RegisterRequest } from '../../Model/RequestModel/AuthModel/AuthRequestModel';
+import type { LoginResponse, RegisterResponse } from '../../Model/ResponseModel/AuthModel/AuthResponseModel';
 
 /**
  * Business-logic controller for authentication.
@@ -8,15 +10,15 @@ import { authService } from '../Service/authService';
  */
 export const authController = {
   /** Log in and return { message, user } or throw / return error shape. */
-  login: async (email: string, password: string) => {
-    const { data } = await authService.login(email, password);
-    return data as { message: string; user?: { name: string; email: string } };
+  login: async ({ email, password }: LoginRequest) => {
+    const { data } = await authService.login({ email, password });
+    return data as LoginResponse;
   },
 
   /** Register a new account, returning the created user document. */
-  register: async (payload: { name: string; email: string; password: string }) => {
+  register: async (payload: RegisterRequest) => {
     const { data } = await authService.register(payload);
-    return data;
+    return data as RegisterResponse;
   },
 
   /** Log out. */

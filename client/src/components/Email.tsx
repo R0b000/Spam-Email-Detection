@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import useApi from '../Helper/useApi';
 import { API_URLS } from '../Manager/Service/api.urls';
 import { routes } from '../Router/routes';
-import type { Mail } from '../types';
+import type { Mail } from '../Model/ResponseModel/EmailModel/EmailResponseModel';
 
 interface EmailProps {
   email: Mail;

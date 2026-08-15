@@ -8,7 +8,7 @@ import axios from 'axios';
 import { API_URI } from '../Configuration/axios';
 import { useAuth } from '../context/AuthContext';
 import { Add as AddIcon } from '@mui/icons-material';
-import type { Mail } from '../types';
+import type { Mail } from '../Model/ResponseModel/EmailModel/EmailResponseModel';
 
 const SideBarContent: React.FC = () => {
   const { type = '' } = useParams();

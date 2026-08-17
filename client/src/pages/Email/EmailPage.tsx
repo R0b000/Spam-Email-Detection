@@ -139,11 +139,15 @@ const EmailPage: React.FC = () => {
       id: 'subject',
       label: 'Subject',
       render: (row: Mail) => (
-        <span>
-          <span className="font-semibold text-gtext">{row.subject}</span>
-          {row.subject && row.body && <span className="text-gsubtext"> - </span>}
-          {row.body && <span className="text-gsubtext">{row.body}</span>}
-        </span>
+        <div className="max-w-[45vw] truncate text-sm">
+          <span className="font-semibold text-gtext">{row.subject || '(No Subject)'}</span>
+          {row.body && (
+            <span className="text-gsubtext font-normal">
+              {' — '}
+              {row.body}
+            </span>
+          )}
+        </div>
       ),
     },
     {
@@ -163,43 +167,60 @@ const EmailPage: React.FC = () => {
 
   return (
     <EmailPageLayout>
-      <Box className="transition-all" style={{ width: `calc(100% - ${sidebarWidth}px)`, marginLeft: sidebarWidth }}>
-        <Box className="sticky top-[64px] z-[10] flex items-center gap-[4px] border-b border-[#dadce0] bg-white px-4 py-2">
-          <Checkbox
-            size="small"
-            checked={allSelected}
-            onChange={(e) => selectAll(e.target.checked)}
-            indeterminate={someSelected}
-          />
-          <IconButton onClick={() => setRefresh((prev) => !prev)} className="text-[#5f6368]">
-            <RefreshOutlined />
-          </IconButton>
-          <IconButton onClick={deleteSelected} disabled={selectedEmails.length === 0} className="text-[#5f6368]">
-            <DeleteOutline />
-          </IconButton>
-          {selectedEmails.length > 0 && (
-            <Typography variant="body2" className="ml-2 text-gsubtext">
-              {selectedEmails.length} selected
-            </Typography>
-          )}
-          <Box className="ml-auto flex">
-            <IconButton className="text-[#5f6368]">
-              <MoreVertOutlined />
-            </IconButton>
-          </Box>
-        </Box>
-
-        <Box className="p-[4px_0_24px]">
-          {emails.length === 0 ? (
-            <NoMails message={EMPTY_TABS[type]} type={type} />
-          ) : (
-            <Table
-              columns={columns}
-              rows={emails}
-              keyExtractor={(row) => row._id}
-              onRowClick={(row) => navigate('/emails/view', { state: { email: row, type } })}
+      <Box
+        className="transition-all"
+        style={{
+          width: `calc(100% - ${sidebarWidth}px)`,
+          marginLeft: sidebarWidth,
+          padding: '12px 24px 24px 12px',
+          boxSizing: 'border-box',
+        }}
+      >
+        <Box className="bg-white rounded-2xl border border-[#dadce0]/60 shadow-sm overflow-hidden flex flex-col min-h-[calc(100vh-100px)]">
+          {/* Toolbar */}
+          <Box className="flex items-center gap-[6px] border-b border-[#dadce0]/50 bg-white px-5 py-3">
+            <Checkbox
+              size="small"
+              checked={allSelected}
+              onChange={(e) => selectAll(e.target.checked)}
+              indeterminate={someSelected}
+              sx={{ p: 0.5 }}
             />
-          )}
+            <IconButton onClick={() => setRefresh((prev) => !prev)} className="text-[#5f6368] hover:bg-gray-100/80" size="small">
+              <RefreshOutlined fontSize="small" />
+            </IconButton>
+            <IconButton
+              onClick={deleteSelected}
+              disabled={selectedEmails.length === 0}
+              className="text-[#5f6368] hover:bg-gray-100/80 disabled:opacity-40"
+              size="small"
+            >
+              <DeleteOutline fontSize="small" />
+            </IconButton>
+            {selectedEmails.length > 0 && (
+              <Typography variant="body2" className="ml-2 font-medium text-gtext">
+                {selectedEmails.length} selected
+              </Typography>
+            )}
+            <Box className="ml-auto flex">
+              <IconButton className="text-[#5f6368] hover:bg-gray-100/80" size="small">
+                <MoreVertOutlined fontSize="small" />
+              </IconButton>
+            </Box>
+          </Box>
+
+          <Box className="flex-1 overflow-y-auto">
+            {emails.length === 0 ? (
+              <NoMails message={EMPTY_TABS[type]} type={type} />
+            ) : (
+              <Table
+                columns={columns}
+                rows={emails}
+                keyExtractor={(row) => row._id}
+                onRowClick={(row) => navigate('/emails/view', { state: { email: row, type } })}
+              />
+            )}
+          </Box>
         </Box>
       </Box>
     </EmailPageLayout>

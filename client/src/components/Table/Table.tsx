@@ -1,5 +1,5 @@
 import React from 'react';
-import { Table as MuiTable, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
+import { Table as MuiTable, TableBody, TableCell, TableContainer, TableRow, Paper } from '@mui/material';
 
 interface Column<T> {
   id: keyof T | string;
@@ -18,21 +18,12 @@ interface TableProps<T> {
 function Table<T>({ columns, rows, keyExtractor, onRowClick }: TableProps<T>) {
   const safeRows = Array.isArray(rows) ? rows.filter(Boolean) : [];
   return (
-    <TableContainer component={Paper} className="border border-gborder">
-      <MuiTable size="small">
-        <TableHead>
-          <TableRow className="bg-gray-50">
-            {columns.map((col) => (
-              <TableCell key={String(col.id)} align={col.align || 'left'} className="font-semibold text-gtext">
-                {col.label}
-              </TableCell>
-            ))}
-          </TableRow>
-        </TableHead>
+    <TableContainer component={Paper} elevation={0} sx={{ border: 'none', background: 'transparent', boxShadow: 'none' }}>
+      <MuiTable size="small" sx={{ borderCollapse: 'collapse' }}>
         <TableBody>
           {safeRows.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={columns.length} className="text-center text-gsubtext py-8">
+              <TableCell colSpan={columns.length} sx={{ border: 'none', textAlign: 'center', py: 12, color: '#5f6368' }}>
                 No data available
               </TableCell>
             </TableRow>
@@ -44,10 +35,30 @@ function Table<T>({ columns, rows, keyExtractor, onRowClick }: TableProps<T>) {
                   key={key}
                   hover
                   onClick={() => onRowClick?.(row)}
-                  className={onRowClick ? 'cursor-pointer' : ''}
+                  sx={{
+                    cursor: onRowClick ? 'pointer' : 'default',
+                    borderBottom: '1px solid #f1f3f4',
+                    transition: 'all 0.15s ease',
+                    backgroundColor: '#fff',
+                    '&:hover': {
+                      backgroundColor: '#f7f9fa !important',
+                      boxShadow: '0 1px 3px 0 rgba(60,64,67,0.2), 0 1px 3px 1px rgba(60,64,67,0.1)',
+                      zIndex: 1,
+                      position: 'relative',
+                    },
+                  }}
                 >
                   {columns.map((col) => (
-                    <TableCell key={String(col.id)} align={col.align || 'left'}>
+                    <TableCell
+                      key={String(col.id)}
+                      align={col.align || 'left'}
+                      sx={{
+                        borderBottom: 'none',
+                        padding: '10px 16px',
+                        fontSize: '0.875rem',
+                        color: '#444746',
+                      }}
+                    >
                       {col.render ? col.render(row) : String(row[col.id as keyof T] ?? '')}
                     </TableCell>
                   ))}

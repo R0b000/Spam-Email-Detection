@@ -12,74 +12,92 @@ const dialogStyle: React.CSSProperties = {
   width: '60%',
   maxWidth: '600px',
   maxHeight: '600px',
-  boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-  borderRadius: '10px',
-  backgroundColor: '#fff',
-  padding: '20px',
-  overflow: 'auto',
+  boxShadow: '0 12px 36px rgba(0, 0, 0, 0.15)',
+  borderRadius: '16px',
+  backgroundColor: '#f6f8fc',
+  padding: '0px',
+  display: 'flex',
+  flexDirection: 'column',
+  overflow: 'hidden',
 };
 
 const Header = styled(Box)({
   display: 'flex',
   justifyContent: 'space-between',
-  padding: '10px 15px',
-  background: '#f2f6fc',
+  alignItems: 'center',
+  padding: '16px 24px',
+  background: '#eaf1fb',
+  borderBottom: '1px solid #dadce0',
   '& > p': {
-    fontSize: 14,
-    fontWeight: 500,
+    fontSize: '15px',
+    fontWeight: 600,
+    color: '#1f1f1f',
   },
 });
 
 const RecipientsWrapper = styled(Box)({
   display: 'flex',
   flexDirection: 'column',
-  padding: '0 15px',
-  '& > div': {
-    fontSize: 14,
-    borderBottom: '1px solid #f5f5f5',
-    marginTop: '10px',
-  },
+  padding: '8px 24px 0',
+  backgroundColor: '#f6f8fc',
 });
 
 const Footer = styled(Box)({
-  position: 'absolute',
-  bottom: '10px',
-  left: 0,
-  right: 0,
   display: 'flex',
   justifyContent: 'space-between',
-  padding: '10px 15px',
+  padding: '16px 24px',
   alignItems: 'center',
+  backgroundColor: '#f6f8fc',
+  borderTop: '1px solid #e0e2e6',
 });
 
 const IconWrapper = styled(Box)({
   display: 'flex',
+  gap: '12px',
+  alignItems: 'center',
+  '& svg': {
+    cursor: 'pointer',
+    color: '#5f6368',
+    borderRadius: '50%',
+    padding: '6px',
+    boxSizing: 'content-box',
+    transition: 'all 0.15s ease-in-out',
+    '&:hover': {
+      backgroundColor: '#e8eaed',
+      color: '#202124',
+    },
+  },
 });
 
 const SendButton = styled(Button)({
-  background: '#0b57d0',
+  background: '#1a73e8',
   color: '#fff',
-  fontWeight: 500,
+  fontWeight: 600,
   textTransform: 'none',
-  borderRadius: '18px',
-  width: '100px',
+  borderRadius: '20px',
+  padding: '6px 24px',
+  '&:hover': {
+    background: '#1557b0',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)',
+  },
 });
 
 const StyledInputBase = styled(InputBase)({
   fontSize: '14px',
-  padding: '8px 12px',
-  marginBottom: '10px',
-  border: 'none',
-  borderRadius: '4px',
-  '&:focus': {
-    borderColor: '#80bdff',
-    boxShadow: '0 0 0 0.2rem rgba(0, 123, 255, 0.25)',
+  padding: '10px 0',
+  borderBottom: '1px solid #dadce0',
+  width: '100%',
+  '& input': {
+    color: '#202124',
   },
 });
 
 const StyledTextField = styled(TextField)({
-  marginBottom: '10px',
   '& .MuiOutlinedInput-root': {
+    padding: '0',
+    fontSize: '14px',
+    color: '#202124',
+    lineHeight: '1.6',
     '& fieldset': {
       borderColor: 'transparent',
     },
@@ -93,31 +111,28 @@ const StyledTextField = styled(TextField)({
 });
 
 const StyledAttachmentContainer = styled('div')({
-  border: '1px solid #ccc',
-  borderRadius: '4px',
-  padding: '5px',
-  marginBottom: 'none',
-  position: 'absolute',
-  bottom: '65px',
-  maxWidth: '100%',
-  width: '91.3%',
-  zIndex: '1',
-  fontSize: '14px',
-  lineHeight: '1.2',
-  maxHeight: '133.5px',
-  overflowY: 'auto',
+  border: '1px solid #dadce0',
+  borderRadius: '8px',
+  padding: '12px',
+  marginTop: '12px',
+  backgroundColor: '#fff',
+  fontSize: '13px',
+  lineHeight: '1.4',
   '& p': {
-    marginBottom: '3px',
+    margin: '0 0 6px',
+    color: '#202124',
   },
   '& img': {
     maxWidth: '100%',
-    maxHeight: '100px',
-    marginBottom: '3px',
+    maxHeight: '120px',
+    borderRadius: '4px',
+    marginBottom: '8px',
+    display: 'block',
   },
   '& a': {
-    color: '#007bff',
+    color: '#1a73e8',
     textDecoration: 'none',
-    cursor: 'pointer',
+    fontWeight: 500,
   },
   '& a:hover': {
     textDecoration: 'underline',
@@ -309,25 +324,29 @@ const ComposeMail = ({ openDialog, setOpenDialog }: ComposeMailProps) => {
     <Dialog open={openDialog} PaperProps={{ sx: dialogStyle }}>
       <Header>
         <Typography>New Message</Typography>
-        <Close fontSize="small" onClick={(e) => closeComposeMail(e)} />
+        <Close fontSize="small" onClick={(e) => closeComposeMail(e)} style={{ cursor: 'pointer', color: '#5f6368' }} />
       </Header>
       <RecipientsWrapper>
         <StyledInputBase placeholder="Recipients" name="to" onChange={(e) => onValueChange(e, 'to')} />
         <StyledInputBase placeholder="Subject" name="subject" onChange={(e) => onValueChange(e, 'subject')} />
       </RecipientsWrapper>
-      <StyledTextField
-        multiline
-        rows={attachment ? 8 : 14}
-        sx={{
-          '& .MuiOutlinedInput-notchedOutline': {
-            border: 'none',
-          },
-        }}
-        onChange={(e) => onValueChange(e, 'body')}
-      />
-      {renderAttachment()}
+      <Box sx={{ flex: 1, overflowY: 'auto', p: '16px 24px', display: 'flex', flexDirection: 'column' }}>
+        <StyledTextField
+          multiline
+          fullWidth
+          placeholder="Compose email..."
+          minRows={8}
+          sx={{
+            '& .MuiOutlinedInput-notchedOutline': {
+              border: 'none',
+            },
+          }}
+          onChange={(e) => onValueChange(e, 'body')}
+        />
+        {renderAttachment()}
+      </Box>
       <Footer>
-        <IconWrapper>
+        <Box>
           {sendingMessage ? (
             <Typography variant="body2" color="textSecondary">
               Sending...
@@ -335,7 +354,7 @@ const ComposeMail = ({ openDialog, setOpenDialog }: ComposeMailProps) => {
           ) : (
             <SendButton onClick={(e) => sendMail(data)}>Send</SendButton>
           )}
-        </IconWrapper>
+        </Box>
         <IconWrapper>
           <AttachFile onClick={handleAttachFileClick} />
           <DeleteOutlined onClick={handleDelete} />

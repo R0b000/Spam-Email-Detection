@@ -8,9 +8,11 @@ interface TextEditorProps {
   disabled?: boolean;
 }
 
+const TinyMCEEditor = Editor as any;
+
 const TextEditor: React.FC<TextEditorProps> = ({ value, onChange, placeholder, disabled }) => {
   return (
-    <Editor
+    <TinyMCEEditor
       apiKey="no-api-key"
       value={value}
       onEditorChange={onChange}

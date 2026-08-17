@@ -4,8 +4,6 @@ import { Box, Checkbox, IconButton, Typography } from '@mui/material';
 import { DeleteOutline, RefreshOutlined, MoreVertOutlined, Star, StarBorder } from '@mui/icons-material';
 import Table from '../../components/Table/Table';
 import { API_URLS } from '../../Manager/Service/api.urls';
-import NoMails from '../../components/common/NoMails';
-import { EMPTY_TABS } from '../../config/constant';
 import httpClient from '../../Configuration/axios';
 import type { Mail } from '../../Model/ResponseModel/EmailModel/EmailResponseModel';
 import type { EmailOutletContext } from './EmailLayout';
@@ -133,10 +131,32 @@ const EmailPage: React.FC = () => {
       label: 'Sender',
       gridSpan: 4,
       render: (row: Mail) => {
-        const isOutbound = type === 'sent' || type === 'draft';
+        if (type === 'draft' || row.type === 'draft') {
+          return (
+            <span className="text-[#d93025] font-semibold">
+              Draft
+            </span>
+          );
+        }
+        if (type === 'inbox') {
+          return (
+            <span className={`${row.isRead ? 'font-normal' : 'font-semibold'} text-gtext truncate block w-full`}>
+              {row.senderName || row.name || row.receiverEmail || ''}
+            </span>
+          );
+        }
+        if (type === 'sent') {
+          return (
+            <span className={`${row.isRead ? 'font-normal' : 'font-semibold'} text-gtext truncate block w-full`}>
+              {row.receiverEmail ? `To - ${row.receiverEmail}` : ''}
+            </span>
+          );
+        }
+        // Fallback for other tabs (starred, bin, allmail, spam)
+        const isOutbound = row.type === 'sent' || row.sender === user?.email;
         const displayValue = isOutbound
-          ? `To: ${row.receiverName || row.receiverEmail || ''}`
-          : (row.senderName || row.receiverEmail || '');
+          ? (row.receiverEmail ? `To - ${row.receiverEmail}` : '')
+          : (row.senderName || row.name || row.receiverEmail || '');
         return (
           <span className={`${row.isRead ? 'font-normal' : 'font-semibold'} text-gtext truncate block w-full`}>
             {displayValue}
@@ -225,7 +245,20 @@ const EmailPage: React.FC = () => {
 
           <Box className="flex-1 overflow-y-auto">
             {emails.length === 0 ? (
-              <NoMails message={EMPTY_TABS[type]} type={type} />
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  py: 4,
+                  borderBottom: '1px solid #f1f3f4',
+                  fontSize: '0.875rem',
+                  color: '#5f6368',
+                  backgroundColor: '#ffffff',
+                }}
+              >
+                Your {type} is empty.
+              </Box>
             ) : (
               <Table
                 columns={columns}

@@ -1,5 +1,5 @@
 import React, { useState, Suspense } from 'react';
-import { Outlet, NavLink, useParams } from 'react-router-dom';
+import { Outlet, NavLink, useParams, useNavigate } from 'react-router-dom';
 import {
   Avatar,
   Button,
@@ -9,6 +9,10 @@ import {
   ListItemIcon,
   ListItemText,
   Typography,
+  Menu,
+  MenuItem,
+  Divider,
+  Box,
 } from '@mui/material';
 import type { SxProps } from '@mui/material';
 import {
@@ -19,11 +23,14 @@ import {
   Menu as MenuIcon,
   Search,
   SettingsOutlined,
+  ManageAccountsOutlined,
+  LogoutOutlined,
 } from '@mui/icons-material';
 import { SIDEBAR_DATA } from '../../config/sidebar.config';
 import { useAuth } from '../../context/AuthContext';
 import Loader from '../../components/Loader/Loader';
 import ComposeMail from '../../components/ComposeMail';
+import axios from 'axios';
 
 export interface EmailOutletContext {
   openDrawer: boolean;
@@ -85,8 +92,12 @@ const EmailLayout: React.FC = () => {
   const [openDrawer, setOpenDrawer] = useState(true);
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedEmails, setSelectedEmails] = useState<string[]>([]);
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { type = '' } = useParams();
+  const navigate = useNavigate();
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const openMenu = Boolean(anchorEl);
+
   const initial =
     user?.name?.trim().charAt(0).toUpperCase() ||
     user?.email?.trim().charAt(0).toUpperCase() ||
@@ -94,6 +105,26 @@ const EmailLayout: React.FC = () => {
 
   const toggleDrawer = () => setOpenDrawer((prev) => !prev);
   const sidebarWidth = openDrawer ? 256 : 64;
+
+  const handleAvatarClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await axios.post('/logout');
+    } catch (err) {
+      console.error('Error logging out:', err);
+    } finally {
+      logout();
+      handleMenuClose();
+      navigate('/auth/login');
+    }
+  };
 
   return (
     <>
@@ -137,7 +168,25 @@ const EmailLayout: React.FC = () => {
             <IconButton size="small" aria-label="Settings" className="text-gsubtext hover:bg-gray-200/60">
               <SettingsOutlined />
             </IconButton>
-            <Avatar className="ml-2 h-8 w-8 bg-brand-blue text-white text-sm font-semibold">{initial}</Avatar>
+            <Avatar
+              onClick={handleAvatarClick}
+              sx={{
+                cursor: 'pointer',
+                width: 30,
+                height: 30,
+                fontSize: '0.825rem',
+                fontWeight: 600,
+                bgcolor: 'var(--color-brand-blue)',
+                transition: 'all 0.15s ease',
+                '&:hover': {
+                  opacity: 0.9,
+                  boxShadow: '0 0 0 3px rgba(26,115,232,0.15)',
+                },
+              }}
+              className="ml-2"
+            >
+              {initial}
+            </Avatar>
           </div>
         </div>
       </header>
@@ -203,6 +252,116 @@ const EmailLayout: React.FC = () => {
           <Outlet context={{ openDrawer, sidebarWidth, selectedEmails, setSelectedEmails }} />
         </Suspense>
       </main>
+
+      {/* Account Dropdown Menu */}
+      <Menu
+        anchorEl={anchorEl}
+        id="account-menu"
+        open={openMenu}
+        onClose={handleMenuClose}
+        onClick={handleMenuClose}
+        PaperProps={{
+          elevation: 0,
+          sx: {
+            overflow: 'visible',
+            filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.12))',
+            mt: 1.5,
+            width: 320,
+            borderRadius: '16px',
+            padding: '16px',
+            backgroundColor: '#fff',
+            border: '1px solid rgba(0,0,0,0.08)',
+          },
+        }}
+        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+      >
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 1.5 }}>
+          {/* Large Avatar */}
+          <Avatar
+            sx={{
+              width: 56,
+              height: 56,
+              bgcolor: 'var(--color-brand-blue)',
+              fontSize: '1.5rem',
+              fontWeight: 600,
+              mb: 1.5,
+            }}
+          >
+            {initial}
+          </Avatar>
+          <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#202124', mb: 0.25 }}>
+            {user?.name || 'User'}
+          </Typography>
+          <Typography variant="body2" sx={{ color: '#5f6368', mb: 2 }}>
+            {user?.email || ''}
+          </Typography>
+
+          <Button
+            variant="outlined"
+            startIcon={<ManageAccountsOutlined />}
+            sx={{
+              textTransform: 'none',
+              borderRadius: '24px',
+              borderColor: '#dadce0',
+              color: '#1a73e8',
+              fontWeight: 600,
+              fontSize: '0.85rem',
+              px: 3,
+              py: 0.75,
+              '&:hover': {
+                backgroundColor: '#f6f8fc',
+                borderColor: '#1a73e8',
+              },
+            }}
+          >
+            Manage your Account
+          </Button>
+        </Box>
+
+        <Divider sx={{ my: 1.5 }} />
+
+        <MenuItem
+          onClick={handleMenuClose}
+          sx={{
+            py: 1,
+            borderRadius: '8px',
+            '&:hover': { backgroundColor: '#f5f5f5' },
+          }}
+        >
+          <ListItemIcon>
+            <SettingsOutlined fontSize="small" sx={{ color: '#5f6368' }} />
+          </ListItemIcon>
+          <ListItemText primary="Account settings" sx={{ '& .MuiTypography-root': { fontSize: '0.875rem', color: '#202124', fontWeight: 500 } }} />
+        </MenuItem>
+
+        <Divider sx={{ my: 1.5 }} />
+
+        <Box sx={{ display: 'flex', justifyContent: 'center', p: 0.5 }}>
+          <Button
+            onClick={handleLogout}
+            variant="outlined"
+            startIcon={<LogoutOutlined />}
+            sx={{
+              textTransform: 'none',
+              borderRadius: '24px',
+              borderColor: '#d93025',
+              color: '#d93025',
+              fontWeight: 600,
+              fontSize: '0.85rem',
+              px: 4,
+              py: 0.75,
+              width: '100%',
+              '&:hover': {
+                backgroundColor: '#fce8e6',
+                borderColor: '#d93025',
+              },
+            }}
+          >
+            Sign out
+          </Button>
+        </Box>
+      </Menu>
     </>
   );
 };

@@ -1,37 +1,67 @@
 const { spawn } = require('child_process');
+const path = require('path');
+const fs = require('fs');
 
 function runPythonScript(emailSubject, emailBody) {
     return new Promise((resolve, reject) => {
-        // Define the Python script file path
-        const pythonScriptPath = './controller/detect.py';
+        // Absolute path to the Python detection script inside the Python.Service folder
+        const pythonScriptPath = path.join(__dirname, '..', '..', 'Python.Service', 'detect.py');
+
+        console.log('[Python] ---- Python Script Runner ----');
+        console.log('[Python] Script path:', pythonScriptPath);
+        console.log('[Python] Script exists:', fs.existsSync(pythonScriptPath));
+        console.log('[Python] Subject arg:', emailSubject);
+        console.log('[Python] Body arg:', emailBody ? emailBody.substring(0, 80) + '...' : '(empty)');
 
         // Define any arguments to pass to the Python script
         const args = [emailSubject, emailBody];
 
         try{
+            console.log('[Python] Spawning: python', pythonScriptPath);
+            const startTime = Date.now();
+
             // Spawn a child process to execute the Python script
             const pythonProcess = spawn('python', [pythonScriptPath, ...args]);
 
+            console.log('[Python] Process spawned, PID:', pythonProcess.pid);
+
             // Capture the output from the Python script
             let output = '';
+            let errorOutput = '';
             pythonProcess.stdout.on('data', (data) => {
-                output += data.toString();
+                const chunk = data.toString();
+                console.log('[Python stdout]', chunk.trim());
+                output += chunk;
             });
 
-            // Listen for stderr data from the Python process
+            // Listen for stderr data from the Python process (log it but don't reject yet)
             pythonProcess.stderr.on('data', (data) => {
-                console.error(`stderr: ${data}`);
-                reject(data);
+                const chunk = data.toString();
+                console.error('[Python stderr]', chunk.trim());
+                errorOutput += chunk;
+            });
+
+            pythonProcess.on('error', (err) => {
+                console.error('[Python] Failed to start process:', err.message);
+                console.error('[Python] Is Python installed and in PATH?');
+                reject(err);
             });
 
             // Listen for the Python process to exit
             pythonProcess.on('close', (code) => {
-                console.log(`Child process exited with code ${code}`);
-                console.log('Output:', output);
+                const elapsed = Date.now() - startTime;
+                console.log(`[Python] Process exited with code ${code} (took ${elapsed}ms)`);
+                if (code !== 0) {
+                    console.error('[Python] FAILED - stderr output:', errorOutput);
+                    reject(new Error(errorOutput || `Python script exited with code ${code}`));
+                    return;
+                }
+                console.log('[Python] SUCCESS - full output:', output);
+                console.log('[Python] ---- End Python Script Runner ----');
                 resolve(output);
             });
         } catch (error) {
-            console.error('Error detecting spam:', error.message);
+            console.error('[Python] Error spawning process:', error.message);
             reject(error);
         }
     });

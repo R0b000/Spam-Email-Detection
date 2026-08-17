@@ -45,11 +45,29 @@
             res.json({ message: 'Logout success' });
         },
 
+        checkEmail: async (req, res) => {
+            try {
+                const { email } = req.body;
+                if (!email) {
+                    return res.status(400).json({ error: 'Email is required' });
+                }
+                const user = await UserModel.findOne({ email });
+                if (user) {
+                    return res.status(200).json({ message: 'Email found', name: user.name });
+                } else {
+                    return res.status(404).json({ error: 'Couldn\'t find your Email Account' });
+                }
+            } catch (err) {
+                console.error('Error checking email:', err);
+                res.status(500).json({ error: 'Internal Server Error' });
+            }
+        },
+
         savesendEmails: async (req, res) => {
             try {
                 console.log('Incoming POST request to /save:', req.body);
         
-                let { senderId, receiverEmail, content, type } = req.body;
+                let { senderId, receiverEmail, content, type, isSpam } = req.body;
         
                 if (!mongoose.Types.ObjectId.isValid(senderId)) {
                     const user = await UserModel.findOne({ email: senderId });
@@ -60,22 +78,37 @@
                     senderId = user._id;
                 }
         
-                const receiver = await UserModel.findOne({ email: receiverEmail });
-                if (!receiver) {
-                    console.log('Receiver not found for email:', receiverEmail);
-                    return res.status(404).json({ error: 'Receiver not found' });
+                let receiverId = null;
+                if (receiverEmail) {
+                    const receiver = await UserModel.findOne({ email: receiverEmail });
+                    if (!receiver) {
+                        if (type === 'draft') {
+                            receiverId = null;
+                        } else {
+                            console.log('Receiver not found for email:', receiverEmail);
+                            return res.status(404).json({ error: 'Receiver not found' });
+                        }
+                    } else {
+                        receiverId = receiver._id;
+                    }
+                } else {
+                    if (type !== 'draft') {
+                        return res.status(400).json({ error: 'Receiver email is required' });
+                    }
                 }
         
                 const message = await MessageModel.create({
                     sender: senderId,
-                    receiver: receiver._id,
+                    receiver: receiverId,
+                    receiverEmail: receiverEmail || null,
                     subject: content?.subject || null,
                     body: content?.body || null,
                     attachment: content?.attachment || null,
                     date: new Date(),
                     starred: false,
                     bin: false,
-                    type: type || 'sent', // Use the type parameter from the payload or default to 'sent'
+                    isSpam: isSpam || false,
+                    type: type || 'sent',
                 });
         
                 console.log('Message sent successfully:', message);
@@ -88,23 +121,49 @@
 
         detectspam: async (req, res) => {
             try {
-                console.log('Incoming POST request to /detectspam:', req.body);
-        
-                const emailSubject = req.body.emailSubject; // Extract email subject from request body
-                const emailBody = req.body.emailBody; // Extract email body from request body
-        
+                console.log('========== SPAM DETECTION START ==========');
+                console.log('[detectspam] Incoming request body:', JSON.stringify(req.body));
+
+                const emailSubject = req.body.emailSubject;
+                const emailBody = req.body.emailBody;
+
+                console.log('[detectspam] Email Subject:', emailSubject);
+                console.log('[detectspam] Email Body:', emailBody ? emailBody.substring(0, 100) + '...' : '(empty)');
+
+                if (!emailSubject && !emailBody) {
+                    console.warn('[detectspam] WARNING: Both subject and body are empty!');
+                }
+
+                console.log('[detectspam] Calling Python script...');
+                const startTime = Date.now();
+
                 runPythonScript(emailSubject, emailBody)
                     .then((output) => {
-                        console.log('Python script output:', output);
-                        // Send response back to client with the result
+                        const elapsed = Date.now() - startTime;
+                        console.log(`[detectspam] Python script completed in ${elapsed}ms`);
+                        console.log('[detectspam] Python script raw output:', output);
+
+                        // Check if the output contains a prediction
+                        const hasPrediction = output.includes('Prediction:');
+                        console.log('[detectspam] Contains prediction:', hasPrediction);
+
+                        if (hasPrediction) {
+                            const isSpam = output.includes('classified as SPAM');
+                            console.log('[detectspam] Classification result:', isSpam ? 'SPAM' : 'HAM (not spam)');
+                        }
+
+                        console.log('========== SPAM DETECTION END ==========');
                         res.status(200).json({ result: output });
                     })
                     .catch((error) => {
-                        console.error('Error running Python script:', error);
+                        const elapsed = Date.now() - startTime;
+                        console.error(`[detectspam] Python script FAILED after ${elapsed}ms`);
+                        console.error('[detectspam] Error:', error.message);
+                        console.log('========== SPAM DETECTION FAILED ==========');
                         res.status(500).json({ error: 'Internal Server Error' });
                     });
             } catch (error) {
-                console.error('Error detecting spam:', error.message);
+                console.error('[detectspam] Unexpected error:', error.message);
                 res.status(500).json({ error: 'Internal Server Error' });
             }
         },                                  
@@ -139,7 +198,8 @@
                     date: new Date(),
                     starred: false,
                     bin: false,
-                    type: 'spam', // Use the type parameter from the payload or default to 'sent'
+                    isSpam: true,
+                    type: 'spam',
                 });
         
                 console.log('Message sent successfully:', message);
@@ -203,31 +263,35 @@
                 // Retrieve the email of the receiver for each message
                 const messagesWithEmails = await Promise.all(messages.map(async (message) => {
                     let receiverEmail = ''; // Initialize receiverEmail
+                    let senderName = '';
+                    let receiverName = '';
+        
+                    const sender = await UserModel.findById(message.sender);
+                    const receiver = message.receiver ? await UserModel.findById(message.receiver) : null;
+                    
+                    if (sender) senderName = sender.name;
+                    if (receiver) receiverName = receiver.name;
         
                     if (type === 'inbox' || type === 'spam') {
-                        // Find the user document based on the sender ObjectId
-                        const sender = await UserModel.findById(message.sender);
-                        // Use the sender's email as receiverEmail for inbox
-                        receiverEmail = sender.email;
+                        receiverEmail = sender ? sender.email : '';
                     } else if (type === 'starred' || type === 'allmail' || type === 'bin') {
-                        const sender = await UserModel.findById(message.sender);
-                        const receiver = await UserModel.findById(message.receiver);
                         // Use sender email if session user email matches receiver, else use receiver email
-                        if (userEmail !== message.receiver && userEmail !== sender.email) {
-                            receiverEmail = sender.email;
+                        if (message.receiver && userEmail !== message.receiver.toString() && userEmail !== (sender ? sender.email : '')) {
+                            receiverEmail = sender ? sender.email : '';
                         } else { 
-                            receiverEmail = receiver.email;
+                            receiverEmail = message.receiverEmail || (receiver ? receiver.email : '');
                         }
                     } else if (type === 'sent' || type === 'draft') {
-                        // Find the user document based on the receiver ObjectId
-                        const receiver = await UserModel.findById(message.receiver);
-                        // Use the receiver's email as receiverEmail for spam and sent messages
-                        receiverEmail = receiver.email;
+                        if (message.receiverEmail) {
+                            receiverEmail = message.receiverEmail;
+                        } else {
+                            receiverEmail = receiver ? receiver.email : '';
+                        }
                     } 
-                    return { ...message.toObject(), receiverEmail };
+                    return { ...message.toObject(), receiverEmail, senderName, receiverName };
                 }));
         
-                response.status(200).json(messagesWithEmails);
+                response.status(200).json({ message: 'Messages retrieved successfully', data: messagesWithEmails });
         
             } catch (error) {
                 response.status(500).json({ error: error.message });
@@ -277,6 +341,68 @@
             } catch (error) {
                 console.error('Error updating starred status:', error);
                 response.status(500).json({ error: 'Internal Server Error', message: error.message });
+            }
+        },
+        
+        toggleReadEmail: async (request, response) => {
+            try {
+                const { id, value } = request.body;
+        
+                // Update the isRead status of the email
+                await MessageModel.updateOne({ _id: id }, { $set: { isRead: value }});
+        
+                console.log('Read status updated successfully');
+                response.status(201).json({ message: 'Read status updated successfully' });
+            } catch (error) {
+                console.error('Error updating read status:', error);
+                response.status(500).json({ error: 'Internal Server Error', message: error.message });
+            }
+        },
+
+        updateEmail: async (request, response) => {
+            try {
+                const { id } = request.params;
+                const { content, receiverEmail, senderId, name, type } = request.body;
+
+                const updateFields = {
+                    date: new Date(),
+                };
+
+                // Destructure content into top-level schema fields
+                if (content) {
+                    if (content.subject !== undefined) updateFields.subject = content.subject;
+                    if (content.body !== undefined) updateFields.body = content.body;
+                    if (content.attachment !== undefined) updateFields.attachment = content.attachment;
+                }
+
+                if (receiverEmail !== undefined) updateFields.receiverEmail = receiverEmail;
+                if (name !== undefined) updateFields.name = name;
+                if (type !== undefined) updateFields.type = type;
+
+                // Resolve receiver ObjectId if receiverEmail is provided
+                if (receiverEmail) {
+                    const receiver = await UserModel.findOne({ email: receiverEmail });
+                    if (receiver) {
+                        updateFields.receiver = receiver._id;
+                    }
+                }
+
+                await MessageModel.updateOne({ _id: id }, { $set: updateFields });
+                response.status(200).json({ message: 'Email updated successfully' });
+            } catch (error) {
+                console.error('Error updating email:', error);
+                response.status(500).json({ error: 'Internal Server Error' });
+            }
+        },
+
+        deleteEmail: async (request, response) => {
+            try {
+                const { id } = request.params;
+                await MessageModel.deleteOne({ _id: id });
+                response.status(200).json({ message: 'Email deleted successfully' });
+            } catch (error) {
+                console.error('Error deleting email:', error);
+                response.status(500).json({ error: 'Internal Server Error' });
             }
         }
 

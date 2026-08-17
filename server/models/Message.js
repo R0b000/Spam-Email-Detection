@@ -15,7 +15,14 @@ const messageSchema = new mongoose.Schema({
     receiver: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
+    },
+    receiverEmail: {
+        type: String,
+    },
+    isRead: {
+        type: Boolean,
         required: true,
+        default: false,
     },
     subject: String,
     body: String,
@@ -32,6 +39,11 @@ const messageSchema = new mongoose.Schema({
         default: false
     },
     bin: {
+        type: Boolean,
+        required: true,
+        default: false
+    },
+    isSpam: {
         type: Boolean,
         required: true,
         default: false

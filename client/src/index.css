@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+/* Gmail-style brand colors + font used across the app */
+@theme {
+  --font-sans: "Google Sans", Roboto, Arial, sans-serif;
+  --color-brand-blue: #1a73e8;
+  --color-brand-blue-dark: #1765cc;
+  --color-chips-blue: #d3e3fd;
+  --color-compose-blue: #c2e7ff;
+  --color-gtext: #202124;
+  --color-gsubtext: #5f6368;
+  --color-gborder: #dadce0;
+}
+
+html,
+body,
+#root {
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+body {
+  font-family: "Google Sans", Roboto, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+@media (max-width: 450px) {
+  .node {
+    font-size: 50%;
+  }
+}

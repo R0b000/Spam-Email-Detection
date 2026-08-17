@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from './Toaster/Toaster';
 import httpClient from '../Configuration/axios';
 import { API_URLS } from '../Manager/Service/api.urls';
-import { Attachment } from '../Model/ResponseModel/EmailModel/EmailResponseModel';
+import { Attachment, Mail } from '../Model/ResponseModel/EmailModel/EmailResponseModel';
 
 const dialogStyle: React.CSSProperties = {
   position: 'fixed',
@@ -148,13 +148,36 @@ const StyledAttachmentContainer = styled('div')({
 interface ComposeMailProps {
   openDialog: boolean;
   setOpenDialog: React.Dispatch<React.SetStateAction<boolean>>;
+  composeParams?: {
+    id?: string;
+    recipients?: string;
+    subject?: string;
+    email?: string;
+    attachment?: Attachment | null;
+    type?: string;
+  } | null;
+  setComposeParams?: React.Dispatch<React.SetStateAction<any>>;
 }
 
-const ComposeMail = ({ openDialog, setOpenDialog }: ComposeMailProps) => {
+const ComposeMail = ({ openDialog, setOpenDialog, composeParams, setComposeParams }: ComposeMailProps) => {
   const { showProgressToast, showSuccessToast, showErrorToast } = useToast();
   const [sendingMessage, setSendingMessage] = useState(false);
   const [attachment, setAttachment] = useState<Attachment | null>(null);
   const [data, setData] = useState<any>({});
+
+  React.useEffect(() => {
+    if (composeParams) {
+      setData({
+        to: composeParams.recipients || '',
+        subject: composeParams.subject || '',
+        body: composeParams.email || '',
+      });
+      setAttachment(composeParams.attachment || null);
+    } else {
+      setData({});
+      setAttachment(null);
+    }
+  }, [composeParams, openDialog]);
 
   const sendMessageServices = API_URLS.savesendEmails;
   const saveDraftService = API_URLS.saveDraftEmails;
@@ -175,6 +198,9 @@ const ComposeMail = ({ openDialog, setOpenDialog }: ComposeMailProps) => {
   const sendMail = async (data: any) => {
     // Close Compose window immediately
     setOpenDialog(false);
+    if (setComposeParams) {
+      setComposeParams(null);
+    }
     showProgressToast('Sending...');
 
     // Run sending process in background
@@ -229,6 +255,15 @@ const ComposeMail = ({ openDialog, setOpenDialog }: ComposeMailProps) => {
           const res = await httpClient.post(sendMessageServices.endpoint, payload);
           showSuccessToast(res.data?.message || 'Email sent.');
         }
+
+        // Clean up the draft document if we sent it
+        if (composeParams?.type === 'draft' && composeParams.id) {
+          try {
+            await httpClient.delete(`/emails/${composeParams.id}`);
+          } catch (deleteError) {
+            console.error('Error cleaning up draft after sending:', deleteError);
+          }
+        }
       } else {
         console.error('No prediction found in Python output:', output);
         showErrorToast('Failed to send email. Please try again.');
@@ -252,8 +287,21 @@ const ComposeMail = ({ openDialog, setOpenDialog }: ComposeMailProps) => {
     setOpenDialog(false);
 
     if (!hasContent) {
+      if (composeParams?.type === 'draft' && composeParams.id) {
+        (async () => {
+          try {
+            await httpClient.delete(`/emails/${composeParams.id}`);
+            showSuccessToast('Draft deleted.');
+          } catch (error) {
+            console.error('Error deleting empty draft:', error);
+          }
+        })();
+      }
       setData({});
       setAttachment(null);
+      if (setComposeParams) {
+        setComposeParams(null);
+      }
       return;
     }
 
@@ -284,12 +332,23 @@ const ComposeMail = ({ openDialog, setOpenDialog }: ComposeMailProps) => {
           type: 'draft',
         };
 
-        await httpClient.post(saveDraftService.endpoint, payload);
-        showSuccessToast('Draft saved.');
+        if (composeParams?.type === 'draft' && composeParams.id) {
+          // Update the existing draft
+          await httpClient.put(`/emails/${composeParams.id}`, payload);
+          showSuccessToast('Draft updated.');
+        } else {
+          // Create a new draft
+          await httpClient.post(saveDraftService.endpoint, payload);
+          showSuccessToast('Draft saved.');
+        }
       } catch (error: any) {
         console.error('Error saving draft in background:', error);
         const errMsg = error.response?.data?.error || error.response?.data?.message || 'Failed to save draft.';
         showErrorToast(errMsg);
+      } finally {
+        if (setComposeParams) {
+          setComposeParams(null);
+        }
       }
     })();
   };
@@ -349,6 +408,8 @@ const ComposeMail = ({ openDialog, setOpenDialog }: ComposeMailProps) => {
 
   if (!openDialog) return null;
 
+  console.log(composeParams);
+
   return (
     <Paper sx={dialogStyle} elevation={4}>
       <Header>
@@ -356,8 +417,8 @@ const ComposeMail = ({ openDialog, setOpenDialog }: ComposeMailProps) => {
         <Close fontSize="small" onClick={(e) => closeComposeMail(e)} style={{ cursor: 'pointer', color: '#5f6368' }} />
       </Header>
       <RecipientsWrapper>
-        <StyledInputBase placeholder="Recipients" name="to" onChange={(e) => onValueChange(e, 'to')} />
-        <StyledInputBase placeholder="Subject" name="subject" onChange={(e) => onValueChange(e, 'subject')} />
+        <StyledInputBase placeholder="Recipients" name="to" value={data.to || ''} onChange={(e) => onValueChange(e, 'to')} />
+        <StyledInputBase placeholder="Subject" name="subject" value={data.subject || ''} onChange={(e) => onValueChange(e, 'subject')} />
       </RecipientsWrapper>
       <Box sx={{ flex: 1, overflowY: 'auto', p: '16px 24px', display: 'flex', flexDirection: 'column' }}>
         <StyledTextField
@@ -370,6 +431,7 @@ const ComposeMail = ({ openDialog, setOpenDialog }: ComposeMailProps) => {
               border: 'none',
             },
           }}
+          value={data.body || ''}
           onChange={(e) => onValueChange(e, 'body')}
         />
         {renderAttachment()}

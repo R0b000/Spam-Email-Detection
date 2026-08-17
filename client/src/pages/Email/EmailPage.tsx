@@ -15,6 +15,9 @@ interface OutletContext extends EmailOutletContext {
   sidebarWidth: number;
   selectedEmails: string[];
   setSelectedEmails: React.Dispatch<React.SetStateAction<string[]>>;
+  setOpenDialog: React.Dispatch<React.SetStateAction<boolean>>;
+  composeParams: any;
+  setComposeParams: React.Dispatch<React.SetStateAction<any>>;
 }
 
 const EmailPage: React.FC = () => {
@@ -23,8 +26,7 @@ const EmailPage: React.FC = () => {
   const [starredSet, setStarredSet] = useState<Set<string>>(new Set());
 
   const { type = '' } = useParams();
-  const { sidebarWidth } = useOutletContext<OutletContext>();
-  const { selectedEmails, setSelectedEmails } = useOutletContext<OutletContext>();
+  const { sidebarWidth, selectedEmails, setSelectedEmails, setOpenDialog, setComposeParams } = useOutletContext<OutletContext>();
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -268,6 +270,18 @@ const EmailPage: React.FC = () => {
                   backgroundColor: row.isRead ? '#ffffff' : '#eaf1fb',
                 })}
                 onRowClick={async (row) => {
+                  if (row.type === 'draft' || type === 'draft') {
+                    setComposeParams({
+                      id: row._id,
+                      recipients: row.receiverEmail || '',
+                      subject: row.subject || '',
+                      email: row.body || '',
+                      attachment: row.attachment || null,
+                      type: 'draft',
+                    });
+                    setOpenDialog(true);
+                    return;
+                  }
                   if (!row.isRead) {
                     try {
                       await httpClient.put('/read', { id: row._id, value: true });

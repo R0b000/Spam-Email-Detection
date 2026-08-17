@@ -12,6 +12,8 @@ routes.post('/save-draft', emailController.savesendEmails);
 routes.put('/bin', emailController.updatedeleteEmails);
 routes.put('/starred', emailController.toggleStarredEmail);
 routes.put('/read', emailController.toggleReadEmail);
+routes.put('/emails/:id', emailController.updateEmail);
+routes.delete('/emails/:id', emailController.deleteEmail);
 routes.post('/spam', emailController.saveSpamEmails);
 routes.post('/detect', emailController.detectspam);
 

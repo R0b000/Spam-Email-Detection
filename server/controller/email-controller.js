@@ -311,6 +311,29 @@
                 console.error('Error updating read status:', error);
                 response.status(500).json({ error: 'Internal Server Error', message: error.message });
             }
+        },
+
+        updateEmail: async (request, response) => {
+            try {
+                const { id } = request.params;
+                const { content, receiverEmail } = request.body;
+                await MessageModel.updateOne({ _id: id }, { $set: { content, receiverEmail, date: new Date() } });
+                response.status(200).json({ message: 'Email updated successfully' });
+            } catch (error) {
+                console.error('Error updating email:', error);
+                response.status(500).json({ error: 'Internal Server Error' });
+            }
+        },
+
+        deleteEmail: async (request, response) => {
+            try {
+                const { id } = request.params;
+                await MessageModel.deleteOne({ _id: id });
+                response.status(200).json({ message: 'Email deleted successfully' });
+            } catch (error) {
+                console.error('Error deleting email:', error);
+                response.status(500).json({ error: 'Internal Server Error' });
+            }
         }
 
     };

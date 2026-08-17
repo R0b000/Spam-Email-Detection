@@ -28,6 +28,7 @@ import {
 } from '@mui/icons-material';
 import { SIDEBAR_DATA } from '../../config/sidebar.config';
 import { useAuth } from '../../context/AuthContext';
+import type { Mail } from '../../Model/ResponseModel/EmailModel/EmailResponseModel';
 import Loader from '../../components/Loader/Loader';
 import ComposeMail from '../../components/ComposeMail';
 import httpClient from '../../Configuration/axios';
@@ -92,6 +93,7 @@ const EmailLayout: React.FC = () => {
   const [openDrawer, setOpenDrawer] = useState(true);
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedEmails, setSelectedEmails] = useState<string[]>([]);
+  const [composeParams, setComposeParams] = useState<any>(null);
   const { user, logout } = useAuth();
   const { type = '' } = useParams();
   const navigate = useNavigate();
@@ -194,7 +196,12 @@ const EmailLayout: React.FC = () => {
       </header>
 
       {/* Compose mail dialog */}
-      <ComposeMail openDialog={openDialog} setOpenDialog={setOpenDialog} />
+      <ComposeMail 
+        openDialog={openDialog} 
+        setOpenDialog={setOpenDialog} 
+        composeParams={composeParams} 
+        setComposeParams={setComposeParams} 
+      />
 
       {/* Collapsible navigation menu */}
       <nav
@@ -251,7 +258,7 @@ const EmailLayout: React.FC = () => {
         style={{ marginTop: 64, height: 'calc(100vh - 64px)' }}
       >
         <Suspense fallback={<Loader />}>
-          <Outlet context={{ openDrawer, sidebarWidth, selectedEmails, setSelectedEmails }} />
+          <Outlet context={{ openDrawer, sidebarWidth, selectedEmails, setSelectedEmails, setOpenDialog, composeParams, setComposeParams }} />
         </Suspense>
       </main>
 

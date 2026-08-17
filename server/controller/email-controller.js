@@ -217,15 +217,18 @@
                 // Retrieve the email of the receiver for each message
                 const messagesWithEmails = await Promise.all(messages.map(async (message) => {
                     let receiverEmail = ''; // Initialize receiverEmail
+                    let senderName = '';
+                    let receiverName = '';
+        
+                    const sender = await UserModel.findById(message.sender);
+                    const receiver = message.receiver ? await UserModel.findById(message.receiver) : null;
+                    
+                    if (sender) senderName = sender.name;
+                    if (receiver) receiverName = receiver.name;
         
                     if (type === 'inbox' || type === 'spam') {
-                        // Find the user document based on the sender ObjectId
-                        const sender = await UserModel.findById(message.sender);
-                        // Use the sender's email as receiverEmail for inbox
                         receiverEmail = sender ? sender.email : '';
                     } else if (type === 'starred' || type === 'allmail' || type === 'bin') {
-                        const sender = await UserModel.findById(message.sender);
-                        const receiver = message.receiver ? await UserModel.findById(message.receiver) : null;
                         // Use sender email if session user email matches receiver, else use receiver email
                         if (message.receiver && userEmail !== message.receiver.toString() && userEmail !== (sender ? sender.email : '')) {
                             receiverEmail = sender ? sender.email : '';
@@ -236,13 +239,10 @@
                         if (message.receiverEmail) {
                             receiverEmail = message.receiverEmail;
                         } else {
-                            // Find the user document based on the receiver ObjectId
-                            const receiver = message.receiver ? await UserModel.findById(message.receiver) : null;
-                            // Use the receiver's email as receiverEmail for spam and sent messages
                             receiverEmail = receiver ? receiver.email : '';
                         }
                     } 
-                    return { ...message.toObject(), receiverEmail };
+                    return { ...message.toObject(), receiverEmail, senderName, receiverName };
                 }));
         
                 response.status(200).json({ message: 'Messages retrieved successfully', data: messagesWithEmails });

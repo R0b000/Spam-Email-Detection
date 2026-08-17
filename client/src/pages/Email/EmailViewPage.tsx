@@ -59,13 +59,11 @@ const EmailViewPage: React.FC = () => {
               <Box className="flex justify-between items-start mb-4">
                 <Box>
                   <Typography className="font-semibold text-gtext">
-                    {email.to && email.to.split('@')[0]}
+                    {email.senderName || 'Unknown'}
                   </Typography>
-                  {email.to && (
-                    <Typography variant="body2" className="text-gsubtext">
-                      &lt;{email.to}&gt;
-                    </Typography>
-                  )}
+                  <Typography variant="body2" className="text-gsubtext">
+                    &lt;{email.receiverEmail || ''}&gt;
+                  </Typography>
                 </Box>
                 <Typography variant="body2" className="text-gsubtext">
                   {email.date && (

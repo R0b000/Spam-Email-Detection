@@ -132,11 +132,17 @@ const EmailPage: React.FC = () => {
       id: 'sender',
       label: 'Sender',
       gridSpan: 4,
-      render: (row: Mail) => (
-        <span className={`${row.isRead ? 'font-normal' : 'font-semibold'} text-gtext truncate block w-full`}>
-          {row.sender || row.receiverEmail || ''}
-        </span>
-      ),
+      render: (row: Mail) => {
+        const isOutbound = type === 'sent' || type === 'draft';
+        const displayValue = isOutbound
+          ? `To: ${row.receiverName || row.receiverEmail || ''}`
+          : (row.senderName || row.receiverEmail || '');
+        return (
+          <span className={`${row.isRead ? 'font-normal' : 'font-semibold'} text-gtext truncate block w-full`}>
+            {displayValue}
+          </span>
+        );
+      },
     },
     {
       id: 'subject',

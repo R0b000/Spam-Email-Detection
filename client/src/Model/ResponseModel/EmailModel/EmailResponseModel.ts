@@ -21,6 +21,8 @@ export interface Mail {
   isRead: boolean;
   type: string;
   name?: string;
+  senderName?: string;
+  receiverName?: string;
 }
 
 export interface SendEmailResponse {

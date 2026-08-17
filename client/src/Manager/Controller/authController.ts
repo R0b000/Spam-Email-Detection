@@ -21,6 +21,12 @@ export const authController = {
     return data as RegisterResponse;
   },
 
+  /** Check if an email exists. Returns { message, name } or throws 404. */
+  checkEmail: async (email: string) => {
+    const { data } = await authService.checkEmail(email);
+    return data as { message: string; name: string };
+  },
+
   /** Log out. */
   logout: async () => {
     const { data } = await authService.logout();

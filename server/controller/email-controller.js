@@ -45,6 +45,24 @@
             res.json({ message: 'Logout success' });
         },
 
+        checkEmail: async (req, res) => {
+            try {
+                const { email } = req.body;
+                if (!email) {
+                    return res.status(400).json({ error: 'Email is required' });
+                }
+                const user = await UserModel.findOne({ email });
+                if (user) {
+                    return res.status(200).json({ message: 'Email found', name: user.name });
+                } else {
+                    return res.status(404).json({ error: 'Couldn\'t find your Email Account' });
+                }
+            } catch (err) {
+                console.error('Error checking email:', err);
+                res.status(500).json({ error: 'Internal Server Error' });
+            }
+        },
+
         savesendEmails: async (req, res) => {
             try {
                 console.log('Incoming POST request to /save:', req.body);

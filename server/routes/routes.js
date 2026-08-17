@@ -6,6 +6,7 @@ const routes = express.Router();
 routes.post('/register', emailController.register);
 routes.post('/login', emailController.login);
 routes.post('/logout', emailController.logout);
+routes.post('/check-email', emailController.checkEmail);
 routes.get('/emails/:type', emailController.getEmails);
 routes.post('/save', emailController.savesendEmails);
 routes.post('/save-draft', emailController.savesendEmails);

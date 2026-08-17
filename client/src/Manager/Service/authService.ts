@@ -10,4 +10,7 @@ export const authService = {
     httpClient.post('/register', data),
 
   logout: () => httpClient.post('/logout'),
+
+  checkEmail: (email: string) =>
+    httpClient.post('/check-email', { email }),
 };

@@ -106,43 +106,49 @@ const EmailPage: React.FC = () => {
 
   const columns = [
     {
-      id: 'select',
+      id: 'select_star',
       label: '',
-      align: 'center' as const,
+      gridSpan: 1,
       render: (row: Mail) => (
-        <Checkbox
-          size="small"
-          checked={selectedEmails.includes(row._id)}
-          onChange={() => toggleSelect(row._id)}
-          onClick={(e) => e.stopPropagation()}
-        />
-      ),
-    },
-    {
-      id: 'star',
-      label: '',
-      align: 'center' as const,
-      render: (row: Mail) => (
-        <IconButton size="small" onClick={(e) => { e.stopPropagation(); toggleStar(row); }}>
-          {row.starred || starredSet.has(row._id) ? <Star style={{ color: '#f7cb4d', fontSize: 20 }} /> : <StarBorder style={{ fontSize: 20 }} />}
-        </IconButton>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          <Checkbox
+            size="small"
+            checked={selectedEmails.includes(row._id)}
+            onChange={() => toggleSelect(row._id)}
+            onClick={(e) => e.stopPropagation()}
+            sx={{ p: 0.5 }}
+          />
+          <IconButton size="small" onClick={(e) => { e.stopPropagation(); toggleStar(row); }} sx={{ p: 0.5 }}>
+            {row.starred || starredSet.has(row._id) ? (
+              <Star style={{ color: '#f7cb4d', fontSize: 20 }} />
+            ) : (
+              <StarBorder style={{ fontSize: 20 }} />
+            )}
+          </IconButton>
+        </Box>
       ),
     },
     {
       id: 'sender',
       label: 'Sender',
+      gridSpan: 4,
       render: (row: Mail) => (
-        <span className={`${row.isRead ? 'font-normal' : 'font-semibold'} text-gtext`}>{row.sender || row.receiverEmail || ''}</span>
+        <span className={`${row.isRead ? 'font-normal' : 'font-semibold'} text-gtext truncate block w-full`}>
+          {row.sender || row.receiverEmail || ''}
+        </span>
       ),
     },
     {
       id: 'subject',
       label: 'Subject',
+      gridSpan: 11,
       render: (row: Mail) => (
-        <div className="max-w-[45vw] truncate text-sm">
-          <span className={`${row.isRead ? 'font-normal' : 'font-semibold'} text-gtext`}>{row.subject || '(No Subject)'}</span>
+        <div className="truncate text-sm flex items-center gap-1.5 w-full pr-4">
+          <span className={`${row.isRead ? 'font-normal' : 'font-semibold'} text-gtext truncate`}>
+            {row.subject || '(No Subject)'}
+          </span>
           {row.body && (
-            <span className="text-gsubtext font-normal">
+            <span className="text-gsubtext font-normal truncate">
               {' — '}
               {row.body}
             </span>
@@ -153,11 +159,12 @@ const EmailPage: React.FC = () => {
     {
       id: 'date',
       label: 'Date',
+      gridSpan: 2,
       align: 'right' as const,
       render: (row: Mail) => {
         const d = new Date(row.date);
         return (
-          <span className="text-sm text-gsubtext">
+          <span className="text-sm text-gsubtext pr-4 block text-right w-full">
             {d.getDate()} {d.toLocaleString('default', { month: 'short' })}
           </span>
         );

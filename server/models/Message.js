@@ -43,6 +43,11 @@ const messageSchema = new mongoose.Schema({
         required: true,
         default: false
     },
+    isSpam: {
+        type: Boolean,
+        required: true,
+        default: false
+    },
     type: {
         type: String,
     },

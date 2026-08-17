@@ -164,6 +164,7 @@ const ComposeMail = ({ openDialog, setOpenDialog, composeParams, setComposeParam
   const [sendingMessage, setSendingMessage] = useState(false);
   const [attachment, setAttachment] = useState<Attachment | null>(null);
   const [data, setData] = useState<any>({});
+  const [draftId, setDraftId] = useState<string | null>(null);
 
   React.useEffect(() => {
     if (composeParams) {
@@ -173,9 +174,13 @@ const ComposeMail = ({ openDialog, setOpenDialog, composeParams, setComposeParam
         body: composeParams.email || '',
       });
       setAttachment(composeParams.attachment || null);
+      // Capture the draft id into dedicated state so it remains available
+      // in async callbacks even after composeParams is reset to null.
+      setDraftId(composeParams.id || null);
     } else {
       setData({});
       setAttachment(null);
+      setDraftId(null);
     }
   }, [composeParams, openDialog]);
 
@@ -245,6 +250,7 @@ const ComposeMail = ({ openDialog, setOpenDialog, composeParams, setComposeParam
           date: new Date(),
           starred: false,
           bin: false,
+          isSpam: isSpam,
           type: isSpam ? 'spam' : 'sent',
         };
 
@@ -257,9 +263,9 @@ const ComposeMail = ({ openDialog, setOpenDialog, composeParams, setComposeParam
         }
 
         // Clean up the draft document if we sent it
-        if (composeParams?.type === 'draft' && composeParams.id) {
+        if (composeParams?.type === 'draft' && draftId) {
           try {
-            await httpClient.delete(`/emails/${composeParams.id}`);
+            await httpClient.delete(`/emails/${draftId}`);
           } catch (deleteError) {
             console.error('Error cleaning up draft after sending:', deleteError);
           }
@@ -287,10 +293,10 @@ const ComposeMail = ({ openDialog, setOpenDialog, composeParams, setComposeParam
     setOpenDialog(false);
 
     if (!hasContent) {
-      if (composeParams?.type === 'draft' && composeParams.id) {
+      if (composeParams?.type === 'draft' && draftId) {
         (async () => {
           try {
-            await httpClient.delete(`/emails/${composeParams.id}`);
+            await httpClient.delete(`/emails/${draftId}`);
             showSuccessToast('Draft deleted.');
           } catch (error) {
             console.error('Error deleting empty draft:', error);
@@ -332,9 +338,9 @@ const ComposeMail = ({ openDialog, setOpenDialog, composeParams, setComposeParam
           type: 'draft',
         };
 
-        if (composeParams?.type === 'draft' && composeParams.id) {
-          // Update the existing draft
-          await httpClient.put(`/emails/${composeParams.id}`, payload);
+        if (draftId) {
+          // Update the existing draft using the captured id
+          await httpClient.put(`/emails/${draftId}`, payload);
           showSuccessToast('Draft updated.');
         } else {
           // Create a new draft

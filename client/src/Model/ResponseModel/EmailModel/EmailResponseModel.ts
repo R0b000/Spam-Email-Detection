@@ -18,6 +18,7 @@ export interface Mail {
   date: string;
   starred: boolean;
   bin: boolean;
+  isSpam: boolean;
   isRead: boolean;
   type: string;
   name?: string;

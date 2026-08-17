@@ -49,7 +49,7 @@
             try {
                 console.log('Incoming POST request to /save:', req.body);
         
-                let { senderId, receiverEmail, content, type } = req.body;
+                let { senderId, receiverEmail, content, type, isSpam } = req.body;
         
                 if (!mongoose.Types.ObjectId.isValid(senderId)) {
                     const user = await UserModel.findOne({ email: senderId });
@@ -89,6 +89,7 @@
                     date: new Date(),
                     starred: false,
                     bin: false,
+                    isSpam: isSpam || false,
                     type: type || 'sent',
                 });
         
@@ -102,23 +103,49 @@
 
         detectspam: async (req, res) => {
             try {
-                console.log('Incoming POST request to /detectspam:', req.body);
-        
-                const emailSubject = req.body.emailSubject; // Extract email subject from request body
-                const emailBody = req.body.emailBody; // Extract email body from request body
-        
+                console.log('========== SPAM DETECTION START ==========');
+                console.log('[detectspam] Incoming request body:', JSON.stringify(req.body));
+
+                const emailSubject = req.body.emailSubject;
+                const emailBody = req.body.emailBody;
+
+                console.log('[detectspam] Email Subject:', emailSubject);
+                console.log('[detectspam] Email Body:', emailBody ? emailBody.substring(0, 100) + '...' : '(empty)');
+
+                if (!emailSubject && !emailBody) {
+                    console.warn('[detectspam] WARNING: Both subject and body are empty!');
+                }
+
+                console.log('[detectspam] Calling Python script...');
+                const startTime = Date.now();
+
                 runPythonScript(emailSubject, emailBody)
                     .then((output) => {
-                        console.log('Python script output:', output);
-                        // Send response back to client with the result
+                        const elapsed = Date.now() - startTime;
+                        console.log(`[detectspam] Python script completed in ${elapsed}ms`);
+                        console.log('[detectspam] Python script raw output:', output);
+
+                        // Check if the output contains a prediction
+                        const hasPrediction = output.includes('Prediction:');
+                        console.log('[detectspam] Contains prediction:', hasPrediction);
+
+                        if (hasPrediction) {
+                            const isSpam = output.includes('classified as SPAM');
+                            console.log('[detectspam] Classification result:', isSpam ? 'SPAM' : 'HAM (not spam)');
+                        }
+
+                        console.log('========== SPAM DETECTION END ==========');
                         res.status(200).json({ result: output });
                     })
                     .catch((error) => {
-                        console.error('Error running Python script:', error);
+                        const elapsed = Date.now() - startTime;
+                        console.error(`[detectspam] Python script FAILED after ${elapsed}ms`);
+                        console.error('[detectspam] Error:', error.message);
+                        console.log('========== SPAM DETECTION FAILED ==========');
                         res.status(500).json({ error: 'Internal Server Error' });
                     });
             } catch (error) {
-                console.error('Error detecting spam:', error.message);
+                console.error('[detectspam] Unexpected error:', error.message);
                 res.status(500).json({ error: 'Internal Server Error' });
             }
         },                                  
@@ -153,7 +180,8 @@
                     date: new Date(),
                     starred: false,
                     bin: false,
-                    type: 'spam', // Use the type parameter from the payload or default to 'sent'
+                    isSpam: true,
+                    type: 'spam',
                 });
         
                 console.log('Message sent successfully:', message);
@@ -316,8 +344,32 @@
         updateEmail: async (request, response) => {
             try {
                 const { id } = request.params;
-                const { content, receiverEmail } = request.body;
-                await MessageModel.updateOne({ _id: id }, { $set: { content, receiverEmail, date: new Date() } });
+                const { content, receiverEmail, senderId, name, type } = request.body;
+
+                const updateFields = {
+                    date: new Date(),
+                };
+
+                // Destructure content into top-level schema fields
+                if (content) {
+                    if (content.subject !== undefined) updateFields.subject = content.subject;
+                    if (content.body !== undefined) updateFields.body = content.body;
+                    if (content.attachment !== undefined) updateFields.attachment = content.attachment;
+                }
+
+                if (receiverEmail !== undefined) updateFields.receiverEmail = receiverEmail;
+                if (name !== undefined) updateFields.name = name;
+                if (type !== undefined) updateFields.type = type;
+
+                // Resolve receiver ObjectId if receiverEmail is provided
+                if (receiverEmail) {
+                    const receiver = await UserModel.findOne({ email: receiverEmail });
+                    if (receiver) {
+                        updateFields.receiver = receiver._id;
+                    }
+                }
+
+                await MessageModel.updateOne({ _id: id }, { $set: updateFields });
                 response.status(200).json({ message: 'Email updated successfully' });
             } catch (error) {
                 console.error('Error updating email:', error);

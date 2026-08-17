@@ -82,7 +82,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             display: 'flex',
             alignItems: 'center',
             gap: 1.5,
-            bgcolor: severity === 'error' ? '#d32f2f' : '#202124',
+            bgcolor: severity === 'error' ? '#d32f2f' : '#5f6368',
             color: '#fff',
             px: 2.5,
             py: 1.5,

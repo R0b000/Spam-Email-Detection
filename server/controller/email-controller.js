@@ -296,6 +296,21 @@
                 console.error('Error updating starred status:', error);
                 response.status(500).json({ error: 'Internal Server Error', message: error.message });
             }
+        },
+        
+        toggleReadEmail: async (request, response) => {
+            try {
+                const { id, value } = request.body;
+        
+                // Update the isRead status of the email
+                await MessageModel.updateOne({ _id: id }, { $set: { isRead: value }});
+        
+                console.log('Read status updated successfully');
+                response.status(201).json({ message: 'Read status updated successfully' });
+            } catch (error) {
+                console.error('Error updating read status:', error);
+                response.status(500).json({ error: 'Internal Server Error', message: error.message });
+            }
         }
 
     };

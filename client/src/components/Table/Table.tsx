@@ -1,5 +1,5 @@
 import React from 'react';
-import { Table as MuiTable, TableBody, TableCell, TableContainer, TableRow, Paper } from '@mui/material';
+import { Table as MuiTable, TableBody, TableCell, TableContainer, TableRow, Paper, SxProps } from '@mui/material';
 
 interface Column<T> {
   id: keyof T | string;
@@ -13,9 +13,10 @@ interface TableProps<T> {
   rows: T[];
   keyExtractor: (row: T) => string | number;
   onRowClick?: (row: T) => void;
+  getRowSx?: (row: T) => SxProps;
 }
 
-function Table<T>({ columns, rows, keyExtractor, onRowClick }: TableProps<T>) {
+function Table<T>({ columns, rows, keyExtractor, onRowClick, getRowSx }: TableProps<T>) {
   const safeRows = Array.isArray(rows) ? rows.filter(Boolean) : [];
   return (
     <TableContainer component={Paper} elevation={0} sx={{ border: 'none', background: 'transparent', boxShadow: 'none' }}>
@@ -42,10 +43,11 @@ function Table<T>({ columns, rows, keyExtractor, onRowClick }: TableProps<T>) {
                     backgroundColor: '#fff',
                     '&:hover': {
                       backgroundColor: '#f7f9fa !important',
-                      boxShadow: '0 1px 3px 0 rgba(60,64,67,0.2), 0 1px 3px 1px rgba(60,64,67,0.1)',
+                      boxShadow: '0 1px 3px 0 rgba(60,64,67,0.08), 0 1px 3px 1px rgba(60,64,67,0.04)',
                       zIndex: 1,
                       position: 'relative',
                     },
+                    ...(getRowSx ? (getRowSx(row) as any) : {}),
                   }}
                 >
                   {columns.map((col) => (

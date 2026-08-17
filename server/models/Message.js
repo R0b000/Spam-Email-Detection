@@ -19,6 +19,11 @@ const messageSchema = new mongoose.Schema({
     receiverEmail: {
         type: String,
     },
+    isRead: {
+        type: Boolean,
+        required: true,
+        default: false,
+    },
     subject: String,
     body: String,
     attachment: attachmentSchema,

@@ -132,7 +132,7 @@ const EmailPage: React.FC = () => {
       id: 'sender',
       label: 'Sender',
       render: (row: Mail) => (
-        <span className="font-semibold text-gtext">{row.sender || row.receiverEmail || ''}</span>
+        <span className={`${row.isRead ? 'font-normal' : 'font-semibold'} text-gtext`}>{row.sender || row.receiverEmail || ''}</span>
       ),
     },
     {
@@ -140,7 +140,7 @@ const EmailPage: React.FC = () => {
       label: 'Subject',
       render: (row: Mail) => (
         <div className="max-w-[45vw] truncate text-sm">
-          <span className="font-semibold text-gtext">{row.subject || '(No Subject)'}</span>
+          <span className={`${row.isRead ? 'font-normal' : 'font-semibold'} text-gtext`}>{row.subject || '(No Subject)'}</span>
           {row.body && (
             <span className="text-gsubtext font-normal">
               {' — '}
@@ -218,7 +218,19 @@ const EmailPage: React.FC = () => {
                 columns={columns}
                 rows={emails}
                 keyExtractor={(row) => row._id}
-                onRowClick={(row) => navigate('/emails/view', { state: { email: row, type } })}
+                getRowSx={(row) => ({
+                  backgroundColor: row.isRead ? '#ffffff' : '#eaf1fb',
+                })}
+                onRowClick={async (row) => {
+                  if (!row.isRead) {
+                    try {
+                      await httpClient.put('/read', { id: row._id, value: true });
+                    } catch (error) {
+                      console.error('Error marking email as read:', error);
+                    }
+                  }
+                  navigate('/emails/view', { state: { email: { ...row, isRead: true }, type } });
+                }}
               />
             )}
           </Box>

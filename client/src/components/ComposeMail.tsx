@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Dialog, Box, Typography, styled, InputBase, TextField, Button } from '@mui/material';
+import { Paper, Box, Typography, styled, InputBase, TextField, Button } from '@mui/material';
 import { Close, DeleteOutlined, AttachFile } from '@mui/icons-material';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
@@ -8,17 +8,22 @@ import { API_URLS } from '../Manager/Service/api.urls';
 import { Attachment } from '../Model/ResponseModel/EmailModel/EmailResponseModel';
 
 const dialogStyle: React.CSSProperties = {
-  height: '90%',
-  width: '60%',
-  maxWidth: '600px',
-  maxHeight: '600px',
-  boxShadow: '0 12px 36px rgba(0, 0, 0, 0.15)',
-  borderRadius: '16px',
+  position: 'fixed',
+  bottom: 0,
+  right: '80px',
+  height: '500px',
+  width: '500px',
+  maxWidth: '90vw',
+  maxHeight: '80vh',
+  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)',
+  borderRadius: '12px 12px 0 0',
   backgroundColor: '#f6f8fc',
   padding: '0px',
   display: 'flex',
   flexDirection: 'column',
   overflow: 'hidden',
+  zIndex: 1300,
+  border: '1px solid #dadce0',
 };
 
 const Header = styled(Box)({
@@ -168,14 +173,15 @@ const ComposeMail = ({ openDialog, setOpenDialog }: ComposeMailProps) => {
   const sendMail = async (data: any) => {
     try {
       setSendingMessage(true);
-      const spamDetectionResponse = await axios.post('/detect', {
+      const spamDetectionResponse = await httpClient.post('/detect', {
         emailSubject: data.subject,
         emailBody: data.body,
       });
-      handleResponse(spamDetectionResponse, data, userEmail, userName);
+      await handleResponse(spamDetectionResponse, data, userEmail, userName);
     } catch (error: any) {
-      console.error('Error sending message:', error.message);
-      alert('Invalid Email. Please try again.');
+      console.error('Error sending message:', error);
+      const errMsg = error.response?.data?.error || error.response?.data?.message || 'Failed to send email. Please try again.';
+      alert(errMsg);
       setSendingMessage(false);
     } finally {
       setTimeout(() => {
@@ -226,6 +232,7 @@ const ComposeMail = ({ openDialog, setOpenDialog }: ComposeMailProps) => {
       }
     } catch (error) {
       console.error('Error handling spam detection response:', error);
+      throw error;
     } finally {
       setSendingMessage(false);
     }
@@ -233,6 +240,20 @@ const ComposeMail = ({ openDialog, setOpenDialog }: ComposeMailProps) => {
 
   const closeComposeMail = async (e: React.MouseEvent) => {
     e.preventDefault();
+    
+    const hasContent = 
+      (data.to && data.to.trim().length > 0) || 
+      (data.subject && data.subject.trim().length > 0) || 
+      (data.body && data.body.trim().length > 0) ||
+      attachment !== null;
+
+    if (!hasContent) {
+      setData({});
+      setAttachment(null);
+      setOpenDialog(false);
+      return;
+    }
+
     try {
       const messageContent: Record<string, unknown> = {};
       if (data.subject) messageContent.subject = data.subject;
@@ -261,8 +282,9 @@ const ComposeMail = ({ openDialog, setOpenDialog }: ComposeMailProps) => {
       setData({});
       setAttachment(null);
     } catch (error: any) {
-      console.error('Error saving draft:', error.message);
-      alert('Invalid Email. Please try again.');
+      console.error('Error saving draft:', error);
+      const errMsg = error.response?.data?.error || error.response?.data?.message || 'Failed to save draft.';
+      alert(errMsg);
     }
     setOpenDialog(false);
   };
@@ -320,8 +342,10 @@ const ComposeMail = ({ openDialog, setOpenDialog }: ComposeMailProps) => {
     return null;
   };
 
+  if (!openDialog) return null;
+
   return (
-    <Dialog open={openDialog} PaperProps={{ sx: dialogStyle }}>
+    <Paper sx={dialogStyle} elevation={4}>
       <Header>
         <Typography>New Message</Typography>
         <Close fontSize="small" onClick={(e) => closeComposeMail(e)} style={{ cursor: 'pointer', color: '#5f6368' }} />
@@ -360,7 +384,7 @@ const ComposeMail = ({ openDialog, setOpenDialog }: ComposeMailProps) => {
           <DeleteOutlined onClick={handleDelete} />
         </IconWrapper>
       </Footer>
-    </Dialog>
+    </Paper>
   );
 };
 

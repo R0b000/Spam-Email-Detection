@@ -60,22 +60,36 @@
                     senderId = user._id;
                 }
         
-                const receiver = await UserModel.findOne({ email: receiverEmail });
-                if (!receiver) {
-                    console.log('Receiver not found for email:', receiverEmail);
-                    return res.status(404).json({ error: 'Receiver not found' });
+                let receiverId = null;
+                if (receiverEmail) {
+                    const receiver = await UserModel.findOne({ email: receiverEmail });
+                    if (!receiver) {
+                        if (type === 'draft') {
+                            receiverId = null;
+                        } else {
+                            console.log('Receiver not found for email:', receiverEmail);
+                            return res.status(404).json({ error: 'Receiver not found' });
+                        }
+                    } else {
+                        receiverId = receiver._id;
+                    }
+                } else {
+                    if (type !== 'draft') {
+                        return res.status(400).json({ error: 'Receiver email is required' });
+                    }
                 }
         
                 const message = await MessageModel.create({
                     sender: senderId,
-                    receiver: receiver._id,
+                    receiver: receiverId,
+                    receiverEmail: receiverEmail || null,
                     subject: content?.subject || null,
                     body: content?.body || null,
                     attachment: content?.attachment || null,
                     date: new Date(),
                     starred: false,
                     bin: false,
-                    type: type || 'sent', // Use the type parameter from the payload or default to 'sent'
+                    type: type || 'sent',
                 });
         
                 console.log('Message sent successfully:', message);
@@ -208,26 +222,30 @@
                         // Find the user document based on the sender ObjectId
                         const sender = await UserModel.findById(message.sender);
                         // Use the sender's email as receiverEmail for inbox
-                        receiverEmail = sender.email;
+                        receiverEmail = sender ? sender.email : '';
                     } else if (type === 'starred' || type === 'allmail' || type === 'bin') {
                         const sender = await UserModel.findById(message.sender);
-                        const receiver = await UserModel.findById(message.receiver);
+                        const receiver = message.receiver ? await UserModel.findById(message.receiver) : null;
                         // Use sender email if session user email matches receiver, else use receiver email
-                        if (userEmail !== message.receiver && userEmail !== sender.email) {
-                            receiverEmail = sender.email;
+                        if (message.receiver && userEmail !== message.receiver.toString() && userEmail !== (sender ? sender.email : '')) {
+                            receiverEmail = sender ? sender.email : '';
                         } else { 
-                            receiverEmail = receiver.email;
+                            receiverEmail = message.receiverEmail || (receiver ? receiver.email : '');
                         }
                     } else if (type === 'sent' || type === 'draft') {
-                        // Find the user document based on the receiver ObjectId
-                        const receiver = await UserModel.findById(message.receiver);
-                        // Use the receiver's email as receiverEmail for spam and sent messages
-                        receiverEmail = receiver.email;
+                        if (message.receiverEmail) {
+                            receiverEmail = message.receiverEmail;
+                        } else {
+                            // Find the user document based on the receiver ObjectId
+                            const receiver = message.receiver ? await UserModel.findById(message.receiver) : null;
+                            // Use the receiver's email as receiverEmail for spam and sent messages
+                            receiverEmail = receiver ? receiver.email : '';
+                        }
                     } 
                     return { ...message.toObject(), receiverEmail };
                 }));
         
-                response.status(200).json(messagesWithEmails);
+                response.status(200).json({ message: 'Messages retrieved successfully', data: messagesWithEmails });
         
             } catch (error) {
                 response.status(500).json({ error: error.message });

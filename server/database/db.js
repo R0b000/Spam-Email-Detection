@@ -4,7 +4,7 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 const Connection = () => {
-    const DB_URL = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@e-commerce.lswq8bw.mongodb.net/?appName=E-COMMERCE`;
+    const DB_URL = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@e-commerce.lswq8bw.mongodb.net/Email?appName=E-COMMERCE`;
     try {
         mongoose.connect(DB_URL);
         console.log('Database connected successfully'); 

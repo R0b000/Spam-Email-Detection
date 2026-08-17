@@ -174,9 +174,10 @@ const EmailPage: React.FC = () => {
           marginLeft: sidebarWidth,
           padding: '12px 24px 24px 12px',
           boxSizing: 'border-box',
+          height: '100%',
         }}
       >
-        <Box className="bg-white rounded-2xl border border-[#dadce0]/60 shadow-sm overflow-hidden flex flex-col min-h-[calc(100vh-100px)]">
+        <Box className="bg-white rounded-2xl border border-[#dadce0]/60 shadow-sm overflow-hidden flex flex-col h-full">
           {/* Toolbar */}
           <Box className="flex items-center gap-[6px] border-b border-[#dadce0]/50 bg-white px-5 py-3">
             <Checkbox

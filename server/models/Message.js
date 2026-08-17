@@ -15,7 +15,9 @@ const messageSchema = new mongoose.Schema({
     receiver: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required: true,
+    },
+    receiverEmail: {
+        type: String,
     },
     subject: String,
     body: String,

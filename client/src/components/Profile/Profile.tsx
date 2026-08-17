@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Dialog, Button, Box, Typography, styled } from '@mui/material';
-import axios from 'axios';
+import httpClient from '../../Configuration/axios';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
@@ -40,7 +40,7 @@ const Profile = ({ open, onClose }: ProfileProps) => {
     try {
       setLoading(true);
       setError(null);
-      const result = await axios.post('/logout');
+      const result = await httpClient.post('/logout');
       if (result.data === 'Logout success' || result.data?.message === 'Logout success') {
         logout();
       } else {

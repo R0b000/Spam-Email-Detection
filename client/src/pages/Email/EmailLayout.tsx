@@ -30,7 +30,7 @@ import { SIDEBAR_DATA } from '../../config/sidebar.config';
 import { useAuth } from '../../context/AuthContext';
 import Loader from '../../components/Loader/Loader';
 import ComposeMail from '../../components/ComposeMail';
-import axios from 'axios';
+import httpClient from '../../Configuration/axios';
 
 export interface EmailOutletContext {
   openDrawer: boolean;
@@ -116,7 +116,7 @@ const EmailLayout: React.FC = () => {
 
   const handleLogout = async () => {
     try {
-      await axios.post('/logout');
+      await httpClient.post('/logout');
     } catch (err) {
       console.error('Error logging out:', err);
     } finally {
@@ -245,8 +245,8 @@ const EmailLayout: React.FC = () => {
 
       {/* Main content */}
       <main
-        className="transition-all bg-[#f6f8fc]"
-        style={{ marginTop: 64, minHeight: 'calc(100vh - 64px)' }}
+        className="transition-all bg-[#f6f8fc] overflow-hidden"
+        style={{ marginTop: 64, height: 'calc(100vh - 64px)' }}
       >
         <Suspense fallback={<Loader />}>
           <Outlet context={{ openDrawer, sidebarWidth, selectedEmails, setSelectedEmails }} />

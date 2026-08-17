@@ -3,6 +3,7 @@ import { Paper, Box, Typography, styled, InputBase, TextField, Button } from '@m
 import { Close, DeleteOutlined, AttachFile } from '@mui/icons-material';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from './Toaster/Toaster';
 import httpClient from '../Configuration/axios';
 import { API_URLS } from '../Manager/Service/api.urls';
 import { Attachment } from '../Model/ResponseModel/EmailModel/EmailResponseModel';
@@ -150,6 +151,7 @@ interface ComposeMailProps {
 }
 
 const ComposeMail = ({ openDialog, setOpenDialog }: ComposeMailProps) => {
+  const { showProgressToast, showSuccessToast, showErrorToast } = useToast();
   const [sendingMessage, setSendingMessage] = useState(false);
   const [attachment, setAttachment] = useState<Attachment | null>(null);
   const [data, setData] = useState<any>({});
@@ -171,26 +173,27 @@ const ComposeMail = ({ openDialog, setOpenDialog }: ComposeMailProps) => {
   };
 
   const sendMail = async (data: any) => {
-    try {
-      setSendingMessage(true);
-      const spamDetectionResponse = await httpClient.post('/detect', {
-        emailSubject: data.subject,
-        emailBody: data.body,
-      });
-      await handleResponse(spamDetectionResponse, data, userEmail, userName);
-    } catch (error: any) {
-      console.error('Error sending message:', error);
-      const errMsg = error.response?.data?.error || error.response?.data?.message || 'Failed to send email. Please try again.';
-      alert(errMsg);
-      setSendingMessage(false);
-    } finally {
-      setTimeout(() => {
-        setOpenDialog(false);
-      }, 1000);
-    }
+    // Close Compose window immediately
+    setOpenDialog(false);
+    showProgressToast('Sending...');
+
+    // Run sending process in background
+    (async () => {
+      try {
+        const spamDetectionResponse = await httpClient.post('/detect', {
+          emailSubject: data.subject,
+          emailBody: data.body,
+        });
+        await handleResponseInBackground(spamDetectionResponse, data, userEmail, userName);
+      } catch (error: any) {
+        console.error('Error sending message in background:', error);
+        const errMsg = error.response?.data?.error || error.response?.data?.message || 'Failed to send email. Please try again.';
+        showErrorToast(errMsg);
+      }
+    })();
   };
 
-  const handleResponse = async (
+  const handleResponseInBackground = async (
     spamDetectionResponse: any,
     data: any,
     userEmail: string | null,
@@ -221,20 +224,18 @@ const ComposeMail = ({ openDialog, setOpenDialog }: ComposeMailProps) => {
 
         if (isSpam) {
           await httpClient.post(saveSpamServices.endpoint, payload);
-          alert('Spam email saved.');
+          showSuccessToast('Spam email saved.');
         } else {
           const res = await httpClient.post(sendMessageServices.endpoint, payload);
-          alert(res.data?.message || 'Email sent.');
+          showSuccessToast(res.data?.message || 'Email sent.');
         }
       } else {
         console.error('No prediction found in Python output:', output);
-        alert('Failed to send email. Please try again.');
+        showErrorToast('Failed to send email. Please try again.');
       }
     } catch (error) {
-      console.error('Error handling spam detection response:', error);
+      console.error('Error handling spam detection response in background:', error);
       throw error;
-    } finally {
-      setSendingMessage(false);
     }
   };
 
@@ -247,46 +248,50 @@ const ComposeMail = ({ openDialog, setOpenDialog }: ComposeMailProps) => {
       (data.body && data.body.trim().length > 0) ||
       attachment !== null;
 
+    // Close window immediately
+    setOpenDialog(false);
+
     if (!hasContent) {
       setData({});
       setAttachment(null);
-      setOpenDialog(false);
       return;
     }
 
-    try {
-      const messageContent: Record<string, unknown> = {};
-      if (data.subject) messageContent.subject = data.subject;
-      if (data.body) messageContent.body = data.body;
-      if (attachment) {
-        messageContent.attachment = {
-          name: attachment.name,
-          type: attachment.type,
-          content: attachment.content,
+    showProgressToast('Saving draft...');
+
+    // Run saving draft process in background
+    (async () => {
+      try {
+        const messageContent: Record<string, unknown> = {};
+        if (data.subject) messageContent.subject = data.subject;
+        if (data.body) messageContent.body = data.body;
+        if (attachment) {
+          messageContent.attachment = {
+            name: attachment.name,
+            type: attachment.type,
+            content: attachment.content,
+          };
+        }
+
+        const payload = {
+          senderId: userEmail,
+          receiverEmail: data.to || null,
+          content: Object.keys(messageContent).length > 0 ? messageContent : null,
+          name: userName,
+          date: new Date(),
+          starred: false,
+          bin: false,
+          type: 'draft',
         };
+
+        await httpClient.post(saveDraftService.endpoint, payload);
+        showSuccessToast('Draft saved.');
+      } catch (error: any) {
+        console.error('Error saving draft in background:', error);
+        const errMsg = error.response?.data?.error || error.response?.data?.message || 'Failed to save draft.';
+        showErrorToast(errMsg);
       }
-
-      const payload = {
-        senderId: userEmail,
-        receiverEmail: data.to || null,
-        content: Object.keys(messageContent).length > 0 ? messageContent : null,
-        name: userName,
-        date: new Date(),
-        starred: false,
-        bin: false,
-        type: 'draft',
-      };
-
-      await httpClient.post(saveDraftService.endpoint, payload);
-      alert('Draft saved.');
-      setData({});
-      setAttachment(null);
-    } catch (error: any) {
-      console.error('Error saving draft:', error);
-      const errMsg = error.response?.data?.error || error.response?.data?.message || 'Failed to save draft.';
-      alert(errMsg);
-    }
-    setOpenDialog(false);
+    })();
   };
 
   const handleAttachFileClick = () => {

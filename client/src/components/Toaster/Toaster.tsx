@@ -1,14 +1,11 @@
 import React, { useState, createContext, useContext, useCallback } from 'react';
-import { Snackbar, Alert } from '@mui/material';
-
-interface Toast {
-  id: number;
-  message: string;
-  severity: 'success' | 'error' | 'warning' | 'info';
-}
+import { Snackbar, Box, CircularProgress, Typography } from '@mui/material';
 
 interface ToastContextValue {
-  showToast: (message: string, severity?: Toast['severity']) => void;
+  showProgressToast: (message: string) => void;
+  showSuccessToast: (message: string) => void;
+  showErrorToast: (message: string) => void;
+  hideToast: () => void;
 }
 
 const ToastContext = createContext<ToastContextValue | undefined>(undefined);
@@ -19,36 +16,89 @@ export const useToast = (): ToastContextValue => {
   return context;
 };
 
-const Toaster: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [toasts, setToasts] = useState<Toast[]>([]);
+export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [open, setOpen] = useState(false);
+  const [message, setMessage] = useState('');
+  const [severity, setSeverity] = useState<'info' | 'success' | 'error'>('info');
+  const [isProgress, setIsProgress] = useState(false);
+  const [timeoutId, setTimeoutId] = useState<ReturnType<typeof setTimeout> | null>(null);
 
-  const showToast = useCallback((message: string, severity: Toast['severity'] = 'info') => {
-    const id = Date.now();
-    setToasts((prev) => [...prev, { id, message, severity }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 3000);
-  }, []);
+  const clearExistingTimeout = useCallback(() => {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+      setTimeoutId(null);
+    }
+  }, [timeoutId]);
+
+  const showProgressToast = useCallback((msg: string) => {
+    clearExistingTimeout();
+    setMessage(msg);
+    setSeverity('info');
+    setIsProgress(true);
+    setOpen(true);
+  }, [clearExistingTimeout]);
+
+  const showSuccessToast = useCallback((msg: string) => {
+    clearExistingTimeout();
+    setMessage(msg);
+    setSeverity('success');
+    setIsProgress(false);
+    setOpen(true);
+    
+    const id = setTimeout(() => {
+      setOpen(false);
+    }, 4000);
+    setTimeoutId(id);
+  }, [clearExistingTimeout]);
+
+  const showErrorToast = useCallback((msg: string) => {
+    clearExistingTimeout();
+    setMessage(msg);
+    setSeverity('error');
+    setIsProgress(false);
+    setOpen(true);
+
+    const id = setTimeout(() => {
+      setOpen(false);
+    }, 5000);
+    setTimeoutId(id);
+  }, [clearExistingTimeout]);
+
+  const hideToast = useCallback(() => {
+    clearExistingTimeout();
+    setOpen(false);
+  }, [clearExistingTimeout]);
 
   return (
-    <ToastContext.Provider value={{ showToast }}>
+    <ToastContext.Provider value={{ showProgressToast, showSuccessToast, showErrorToast, hideToast }}>
       {children}
-      <div className="fixed bottom-4 right-4 z-[9999] flex flex-col gap-2">
-        {toasts.map((toast) => (
-          <Snackbar
-            key={toast.id}
-            open
-            autoHideDuration={3000}
-            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-          >
-            <Alert severity={toast.severity} variant="filled" className="min-w-[280px]">
-              {toast.message}
-            </Alert>
-          </Snackbar>
-        ))}
-      </div>
+      <Snackbar
+        open={open}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        onClose={isProgress ? undefined : () => setOpen(false)}
+      >
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.5,
+            bgcolor: severity === 'error' ? '#d32f2f' : '#202124',
+            color: '#fff',
+            px: 2.5,
+            py: 1.5,
+            borderRadius: 2,
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+            minWidth: 280,
+          }}
+        >
+          {isProgress && (
+            <CircularProgress size={16} sx={{ color: '#fff' }} />
+          )}
+          <Typography variant="body2" sx={{ fontWeight: 500, flexGrow: 1, letterSpacing: '0.2px' }}>
+            {message}
+          </Typography>
+        </Box>
+      </Snackbar>
     </ToastContext.Provider>
   );
 };
-
-export default Toaster;

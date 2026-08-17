@@ -98,6 +98,8 @@ const EmailLayout: React.FC = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const openMenu = Boolean(anchorEl);
 
+
+
   const initial =
     user?.name?.trim().charAt(0).toUpperCase() ||
     user?.email?.trim().charAt(0).toUpperCase() ||
@@ -362,6 +364,7 @@ const EmailLayout: React.FC = () => {
           </Button>
         </Box>
       </Menu>
+
     </>
   );
 };

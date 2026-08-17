@@ -254,7 +254,7 @@ const EmailLayout: React.FC = () => {
 
       {/* Main content */}
       <main
-        className="transition-all bg-[#f6f8fc] overflow-hidden"
+        className="transition-all bg-[#f6f8fc] overflow-hidden flex flex-col"
         style={{ marginTop: 64, height: 'calc(100vh - 64px)' }}
       >
         <Suspense fallback={<Loader />}>

@@ -6,7 +6,7 @@ interface EmailPageLayoutProps {
 }
 
 const EmailPageLayout: React.FC<EmailPageLayoutProps> = ({ children }) => {
-  return <Box className="relative h-full">{children}</Box>;
+  return <Box className="relative flex-1 min-h-0 overflow-hidden">{children}</Box>;
 };
 
 export default EmailPageLayout;

@@ -203,13 +203,14 @@ const EmailPage: React.FC = () => {
   return (
     <EmailPageLayout>
       <Box
-        className="transition-all"
+        className="transition-all flex flex-col"
         style={{
           width: `calc(100% - ${sidebarWidth}px)`,
           marginLeft: sidebarWidth,
           padding: '12px 24px 24px 12px',
           boxSizing: 'border-box',
           height: '100%',
+          minHeight: 0,
         }}
       >
         <Box className="bg-white rounded-2xl border border-[#dadce0]/60 shadow-sm overflow-hidden flex flex-col h-full">

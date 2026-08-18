@@ -30,26 +30,33 @@ const EmailPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchEmails = async () => {
-      try {
-        const userEmail = user?.email;
-        if (!userEmail) {
-          console.error('User email not found');
-          return;
-        }
-
-        const response = await httpClient.get(`/emails/${type}?userEmail=${userEmail}`);
-        const payload = response.data as { message: string; data: Mail[] };
-        setEmails(payload.data ?? []);
-      } catch (error) {
-        console.error('Error fetching emails:', error);
+  const fetchEmails = async () => {
+    try {
+      const userEmail = user?.email;
+      if (!userEmail) {
+        console.error('User email not found');
+        return;
       }
-    };
 
+      const response = await httpClient.get(`/emails/${type}?userEmail=${userEmail}`);
+      const payload = response.data as { message: string; data: Mail[] };
+      setEmails(payload.data ?? []);
+    } catch (error) {
+      console.error('Error fetching emails:', error);
+    }
+  };
+
+  // Fetch on mount, on route change, and on manual refresh
+  useEffect(() => {
     fetchEmails();
 
+    // Poll every 5 seconds
+    const intervalId = setInterval(() => {
+      fetchEmails();
+    }, 5000);
+
     return () => {
+      clearInterval(intervalId);
       setSelectedEmails([]);
     };
   }, [type, refresh, user?.email, setSelectedEmails]);

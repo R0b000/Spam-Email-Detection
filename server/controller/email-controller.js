@@ -78,41 +78,59 @@ const emailController = {
                 senderId = user._id;
             }
     
-            let receiverId = null;
-            if (receiverEmail) {
-                const receiver = await UserModel.findOne({ email: receiverEmail });
-                if (!receiver) {
-                    if (type === 'draft') {
-                        receiverId = null;
-                    } else {
-                        console.log('Receiver not found for email:', receiverEmail);
-                        return res.status(404).json({ error: 'Receiver not found' });
-                    }
-                } else {
-                    receiverId = receiver._id;
-                }
-            } else {
-                if (type !== 'draft') {
-                    return res.status(400).json({ error: 'Receiver email is required' });
-                }
+            let receiverEmails = [];
+            if (Array.isArray(receiverEmail)) {
+                receiverEmails = receiverEmail;
+            } else if (typeof receiverEmail === 'string' && receiverEmail.trim()) {
+                receiverEmails = receiverEmail.split(',').map(e => e.trim()).filter(Boolean);
+            }
+
+            if (type === 'draft') {
+                const receiverStr = receiverEmails.join(', ');
+                const message = await MessageModel.create({
+                    sender: senderId,
+                    receiver: null,
+                    receiverEmail: receiverStr || null,
+                    subject: content?.subject || null,
+                    body: content?.body || null,
+                    attachment: content?.attachment || null,
+                    date: new Date(),
+                    starred: false,
+                    bin: false,
+                    isSpam: isSpam || false,
+                    type: 'draft',
+                });
+                console.log('Draft saved successfully:', message);
+                return res.json({ message: 'Draft saved successfully', data: message });
+            }
+
+            if (receiverEmails.length === 0) {
+                return res.status(400).json({ error: 'Receiver email is required' });
+            }
+
+            let createdMessages = [];
+            for (const rEmail of receiverEmails) {
+                const receiver = await UserModel.findOne({ email: rEmail });
+                const receiverId = receiver ? receiver._id : null;
+
+                const message = await MessageModel.create({
+                    sender: senderId,
+                    receiver: receiverId,
+                    receiverEmail: rEmail,
+                    subject: content?.subject || null,
+                    body: content?.body || null,
+                    attachment: content?.attachment || null,
+                    date: new Date(),
+                    starred: false,
+                    bin: false,
+                    isSpam: isSpam || false,
+                    type: type || 'sent',
+                });
+                createdMessages.push(message);
             }
     
-            const message = await MessageModel.create({
-                sender: senderId,
-                receiver: receiverId,
-                receiverEmail: receiverEmail || null,
-                subject: content?.subject || null,
-                body: content?.body || null,
-                attachment: content?.attachment || null,
-                date: new Date(),
-                starred: false,
-                bin: false,
-                isSpam: isSpam || false,
-                type: type || 'sent',
-            });
-    
-            console.log('Message sent successfully:', message);
-            res.json({ message: 'Message sent successfully', data: message });
+            console.log('Messages sent successfully:', createdMessages);
+            res.json({ message: 'Messages sent successfully', data: createdMessages[0] });
         } catch (error) {
             console.error('Error sending message:', error.message);
             res.status(500).json({ error: 'Internal Server Error' });
@@ -183,27 +201,40 @@ const emailController = {
                 senderId = user._id;
             }
     
-            const receiver = await UserModel.findOne({ email: receiverEmail });
-            if (!receiver) {
-                console.log('Receiver not found for email:', receiverEmail);
-                return res.status(404).json({ error: 'Receiver not found' });
+            let receiverEmails = [];
+            if (Array.isArray(receiverEmail)) {
+                receiverEmails = receiverEmail;
+            } else if (typeof receiverEmail === 'string' && receiverEmail.trim()) {
+                receiverEmails = receiverEmail.split(',').map(e => e.trim()).filter(Boolean);
+            }
+
+            if (receiverEmails.length === 0) {
+                return res.status(400).json({ error: 'Receiver email is required' });
+            }
+
+            let createdMessages = [];
+            for (const rEmail of receiverEmails) {
+                const receiver = await UserModel.findOne({ email: rEmail });
+                const receiverId = receiver ? receiver._id : null;
+
+                const message = await MessageModel.create({
+                    sender: senderId,
+                    receiver: receiverId,
+                    receiverEmail: rEmail,
+                    subject: content?.subject || null,
+                    body: content?.body || null,
+                    attachment: content?.attachment || null,
+                    date: new Date(),
+                    starred: false,
+                    bin: false,
+                    isSpam: true,
+                    type: 'spam',
+                });
+                createdMessages.push(message);
             }
     
-            const message = await MessageModel.create({
-                sender: senderId,
-                receiver: receiver._id,
-                subject: content?.subject || null,
-                body: content?.body || null,
-                attachment: content?.attachment || null,
-                date: new Date(),
-                starred: false,
-                bin: false,
-                isSpam: true,
-                type: 'spam',
-            });
-    
-            console.log('Message sent successfully:', message);
-            res.json({ message: 'Message sent successfully', data: message });
+            console.log('Messages sent successfully:', createdMessages);
+            res.json({ message: 'Messages sent successfully', data: createdMessages[0] });
         } catch (error) {
             console.error('Error sending message:', error.message);
             res.status(500).json({ error: 'Internal Server Error' });
@@ -526,6 +557,27 @@ const emailController = {
             response.status(200).json({ data: mappedMessages });
         } catch (error) {
             console.error('Error searching emails:', error);
+            response.status(500).json({ error: 'Internal Server Error', message: error.message });
+        }
+    },
+
+    getUsers: async (request, response) => {
+        try {
+            const { query } = request.query;
+            let filter = {};
+            if (query) {
+                const regex = new RegExp(query, 'i');
+                filter = {
+                    $or: [
+                        { name: regex },
+                        { email: regex }
+                    ]
+                };
+            }
+            const users = await UserModel.find(filter).limit(10).select('name email');
+            response.status(200).json({ data: users });
+        } catch (error) {
+            console.error('Error fetching users:', error);
             response.status(500).json({ error: 'Internal Server Error', message: error.message });
         }
     }

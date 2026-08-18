@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Paper, Box, Typography, styled, InputBase, TextField, Button } from '@mui/material';
+import { Paper, Box, Typography, styled, InputBase, TextField, Button, Autocomplete, Chip, Avatar } from '@mui/material';
 import { Close, DeleteOutlined, AttachFile } from '@mui/icons-material';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
@@ -165,24 +165,48 @@ const ComposeMail = ({ openDialog, setOpenDialog, composeParams, setComposeParam
   const [attachment, setAttachment] = useState<Attachment | null>(null);
   const [data, setData] = useState<any>({});
   const [draftId, setDraftId] = useState<string | null>(null);
+  const [userSuggestions, setUserSuggestions] = useState<{ name: string; email: string }[]>([]);
+  const [inputValue, setInputValue] = useState('');
+  const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
 
   React.useEffect(() => {
     if (composeParams) {
       setData({
-        to: composeParams.recipients || '',
         subject: composeParams.subject || '',
         body: composeParams.email || '',
       });
       setAttachment(composeParams.attachment || null);
-      // Capture the draft id into dedicated state so it remains available
-      // in async callbacks even after composeParams is reset to null.
       setDraftId(composeParams.id || null);
+
+      const rec = composeParams.recipients 
+        ? composeParams.recipients.split(',').map((e: string) => e.trim()).filter(Boolean)
+        : [];
+      setSelectedRecipients(rec);
     } else {
       setData({});
       setAttachment(null);
       setDraftId(null);
+      setSelectedRecipients([]);
     }
   }, [composeParams, openDialog]);
+
+  React.useEffect(() => {
+    if (!inputValue.trim()) {
+      setUserSuggestions([]);
+      return;
+    }
+    const fetchUsers = async () => {
+      try {
+        const response = await httpClient.get(`/users?query=${inputValue}`);
+        const resData = response.data as { data: { name: string; email: string }[] };
+        setUserSuggestions(resData.data || []);
+      } catch (err) {
+        console.error('Error fetching user suggestions:', err);
+      }
+    };
+    const timeoutId = setTimeout(fetchUsers, 200);
+    return () => clearTimeout(timeoutId);
+  }, [inputValue]);
 
   const sendMessageServices = API_URLS.savesendEmails;
   const saveDraftService = API_URLS.saveDraftEmails;
@@ -193,8 +217,8 @@ const ComposeMail = ({ openDialog, setOpenDialog, composeParams, setComposeParam
   const userName = user?.name ?? null;
 
   const onValueChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, fieldName: string) => {
-    if (fieldName === 'to' || fieldName === 'subject') {
-      setData({ ...data, [fieldName]: e.target.value });
+    if (fieldName === 'subject') {
+      setData({ ...data, subject: e.target.value });
     } else if (fieldName === 'body') {
       setData({ ...data, body: e.target.value });
     }
@@ -215,7 +239,7 @@ const ComposeMail = ({ openDialog, setOpenDialog, composeParams, setComposeParam
           emailSubject: data.subject,
           emailBody: data.body,
         });
-        await handleResponseInBackground(spamDetectionResponse, data, userEmail, userName);
+        await handleResponseInBackground(spamDetectionResponse, data, selectedRecipients, userEmail, userName);
       } catch (error: any) {
         console.error('Error sending message in background:', error);
         const errMsg = error.response?.data?.error || error.response?.data?.message || 'Failed to send email. Please try again.';
@@ -227,6 +251,7 @@ const ComposeMail = ({ openDialog, setOpenDialog, composeParams, setComposeParam
   const handleResponseInBackground = async (
     spamDetectionResponse: any,
     data: any,
+    recipients: string[],
     userEmail: string | null,
     userName: string | null
   ) => {
@@ -236,15 +261,14 @@ const ComposeMail = ({ openDialog, setOpenDialog, composeParams, setComposeParam
       if (predictionIndex !== -1) {
         const prediction = output.substring(predictionIndex);
         const isSpam = prediction.includes('classified as SPAM');
-        const receiverEmail = data.to;
 
         const payload = {
           senderId: userEmail,
-          receiverEmail: receiverEmail,
+          receiverEmail: recipients,
           content: {
             subject: data.subject,
             body: data.body,
-            attachment: data.attachment || null,
+            attachment: attachment || null,
           },
           name: userName,
           date: new Date(),
@@ -284,7 +308,7 @@ const ComposeMail = ({ openDialog, setOpenDialog, composeParams, setComposeParam
     e.preventDefault();
     
     const hasContent = 
-      (data.to && data.to.trim().length > 0) || 
+      (selectedRecipients.length > 0) || 
       (data.subject && data.subject.trim().length > 0) || 
       (data.body && data.body.trim().length > 0) ||
       attachment !== null;
@@ -296,6 +320,7 @@ const ComposeMail = ({ openDialog, setOpenDialog, composeParams, setComposeParam
     if (!hasContent && !draftId) {
       setData({});
       setAttachment(null);
+      setSelectedRecipients([]);
       if (setComposeParams) {
         setComposeParams(null);
       }
@@ -319,6 +344,7 @@ const ComposeMail = ({ openDialog, setOpenDialog, composeParams, setComposeParam
       })();
       setData({});
       setAttachment(null);
+      setSelectedRecipients([]);
       return;
     }
 
@@ -336,7 +362,7 @@ const ComposeMail = ({ openDialog, setOpenDialog, composeParams, setComposeParam
 
     const payload = {
       senderId: userEmail,
-      receiverEmail: data.to || null,
+      receiverEmail: selectedRecipients,
       content: Object.keys(messageContent).length > 0 ? messageContent : null,
       name: userName,
       date: new Date(),
@@ -446,8 +472,68 @@ const ComposeMail = ({ openDialog, setOpenDialog, composeParams, setComposeParam
         <Close fontSize="small" onClick={(e) => closeComposeMail(e)} style={{ cursor: 'pointer', color: '#5f6368' }} />
       </Header>
       <RecipientsWrapper>
-        <StyledInputBase placeholder="Recipients" name="to" value={data.to || ''} onChange={(e) => onValueChange(e, 'to')} />
-        <StyledInputBase placeholder="Subject" name="subject" value={data.subject || ''} onChange={(e) => onValueChange(e, 'subject')} />
+        <Autocomplete
+          multiple
+          freeSolo
+          options={userSuggestions}
+          getOptionLabel={(option) => (typeof option === 'string' ? option : option.email)}
+          value={selectedRecipients}
+          onChange={(_, newValue) => {
+            const emails = newValue.map((val) => (typeof val === 'string' ? val : val.email));
+            setSelectedRecipients(emails);
+          }}
+          inputValue={inputValue}
+          onInputChange={(_, newInputValue) => {
+            setInputValue(newInputValue);
+          }}
+          renderTags={(value, getTagProps) =>
+            value.map((option, index) => (
+              <Chip
+                variant="outlined"
+                label={option}
+                size="small"
+                {...getTagProps({ index })}
+                sx={{ margin: '2px 4px 2px 0' }}
+              />
+            ))
+          }
+          renderInput={(params) => {
+            const { InputLabelProps, InputProps, ...rest } = params;
+            return (
+              <Box 
+                ref={params.InputProps.ref} 
+                className="flex items-center flex-wrap py-1 border-b border-[#dadce0] w-full min-h-[40px]"
+              >
+                {params.InputProps.startAdornment}
+                <input
+                  {...params.inputProps}
+                  {...rest}
+                  placeholder={selectedRecipients.length === 0 ? "Recipients" : ""}
+                  className="flex-1 min-w-[120px] border-none outline-none text-sm text-gtext bg-transparent py-1.5"
+                />
+              </Box>
+            );
+          }}
+          renderOption={(props, option) => (
+            <li {...props} className="flex items-center gap-3 px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm">
+              <Avatar sx={{ width: 28, height: 28, fontSize: '11px', bgcolor: 'var(--color-brand-blue)' }}>
+                {option.name ? option.name.charAt(0).toUpperCase() : option.email.charAt(0).toUpperCase()}
+              </Avatar>
+              <div className="flex flex-col">
+                <span className="font-semibold text-gtext">{option.name || 'User'}</span>
+                <span className="text-gsubtext text-xs">{option.email}</span>
+              </div>
+            </li>
+          )}
+          noOptionsText={inputValue.trim() ? "No users found" : "Type to search users..."}
+          sx={{ width: '100%' }}
+        />
+        <StyledInputBase 
+          placeholder="Subject" 
+          name="subject" 
+          value={data.subject || ''} 
+          onChange={(e) => onValueChange(e, 'subject')} 
+        />
       </RecipientsWrapper>
       <Box sx={{ flex: 1, overflowY: 'auto', p: '16px 24px', display: 'flex', flexDirection: 'column' }}>
         <StyledTextField

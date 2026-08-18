@@ -29,7 +29,7 @@ const EmailRoute: RouteObject[] = [
     children: [
       { index: true, element: <Navigate to="inbox" replace /> },
       { path: ':type', element: <EmailListPage /> },
-      { path: 'view', element: <EmailView /> },
+      { path: ':type/view', element: <EmailView /> },
     ],
   },
 ];

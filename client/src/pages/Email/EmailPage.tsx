@@ -298,7 +298,7 @@ const EmailPage: React.FC = () => {
                       console.error('Error marking email as read:', error);
                     }
                   }
-                  navigate('/emails/view', { state: { email: { ...row, isRead: true }, type } });
+                  navigate(`/emails/${type}/view`, { state: { email: { ...row, isRead: true }, type } });
                 }}
               />
             )}

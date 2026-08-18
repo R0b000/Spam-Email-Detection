@@ -18,6 +18,7 @@ import type { SxProps } from '@mui/material';
 import {
   Add as AddIcon,
   AppsOutlined,
+  ChatBubbleOutline,
   HelpOutline,
   MailOutlined,
   Menu as MenuIcon,
@@ -25,6 +26,7 @@ import {
   SettingsOutlined,
   ManageAccountsOutlined,
   LogoutOutlined,
+  VideocamOutlined,
 } from '@mui/icons-material';
 import { SIDEBAR_DATA } from '../../config/sidebar.config';
 import { useAuth } from '../../context/AuthContext';
@@ -38,8 +40,7 @@ export interface EmailOutletContext {
   sidebarWidth: number;
 }
 
-// Shared styles so the Compose button and the sidebar list items look like
-// part of the same cohesive group.
+// Nav sidebar item styles
 const sidebarItemSx: SxProps = {
   textTransform: 'none',
   fontWeight: 500,
@@ -67,16 +68,17 @@ const sidebarItemSx: SxProps = {
   },
 };
 
-const composeButtonSx = (openDrawer: boolean) => ({
+// Compose button styles
+const composeButtonSx = {
   textTransform: 'none',
   fontWeight: 600,
   fontSize: '0.875rem',
   borderRadius: '16px',
   backgroundColor: '#c2e7ff',
   color: '#001d35',
-  padding: openDrawer ? '16px 24px' : '16px',
+  padding: '16px 24px',
   margin: '12px 12px 16px',
-  minWidth: openDrawer ? '130px' : '48px',
+  minWidth: '130px',
   height: '56px',
   display: 'flex',
   justifyContent: 'center',
@@ -86,6 +88,26 @@ const composeButtonSx = (openDrawer: boolean) => ({
   '&:hover': {
     backgroundColor: '#b3dbf7',
     boxShadow: '0 4px 6px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.08)',
+  },
+};
+
+// Icon rail item styles
+const iconRailItemSx = (active: boolean): SxProps => ({
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  gap: '2px',
+  py: 1,
+  px: 1,
+  mx: 'auto',
+  mb: 0.5,
+  borderRadius: '16px',
+  cursor: 'pointer',
+  width: '56px',
+  backgroundColor: active ? '#d3e3fd' : 'transparent',
+  color: active ? '#041e49' : '#444746',
+  '&:hover': {
+    backgroundColor: active ? '#d3e3fd' : '#e8eaed',
   },
 });
 
@@ -100,15 +122,12 @@ const EmailLayout: React.FC = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const openMenu = Boolean(anchorEl);
 
-
-
   const initial =
     user?.name?.trim().charAt(0).toUpperCase() ||
     user?.email?.trim().charAt(0).toUpperCase() ||
     '?';
 
   const toggleDrawer = () => setOpenDrawer((prev) => !prev);
-  const sidebarWidth = openDrawer ? 256 : 64;
 
   const handleAvatarClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -132,9 +151,10 @@ const EmailLayout: React.FC = () => {
 
   return (
     <>
-      {/* Top app bar */}
-      <header className="fixed top-0 left-0 z-30 flex h-16 w-full items-center gap-3 bg-[#f6f8fc] px-4 border-b border-[#dadce0]/60">
-        <div className="flex w-[15vw] shrink-0 items-center pl-2">
+      {/* ── Header ── */}
+      <header className="fixed top-0 left-0 z-30 flex h-16 w-full bg-[#f6f8fc] border-b border-[#dadce0]/60">
+        {/* 8vw: Hamburger menu — aligns with icon rail below */}
+        <div className="w-[8vw] shrink-0 flex items-center justify-center">
           <IconButton
             size="small"
             onClick={toggleDrawer}
@@ -144,14 +164,18 @@ const EmailLayout: React.FC = () => {
             <MenuIcon />
           </IconButton>
         </div>
-        <div className='flex w-[85vw] pr-4 items-center justify-between'>
-          <div className="flex items-center gap-1.5">
-            <img src='/src/img/Email.svg' alt='Email Logo' className="h-8 w-8" />
+
+        {/* 92vw: Logo + Search + Actions */}
+        <div className="flex-1 flex items-center py-2 px-4 gap-4">
+          {/* Logo — spans ~15vw to align with nav sidebar */}
+          <div className="w-[15vw] shrink-0 flex items-center gap-2">
+            <img src='/src/img/Email.svg' alt='Email Logo' className="h-7 w-7" />
+            <span className="text-[22px] text-gsubtext font-normal tracking-tight">Email</span>
           </div>
 
-          {/* Search */}
-          <div className="min-w-[45vw]">
-            <div className="flex w-full max-w-2xl items-center rounded-full bg-[#eaf1fb] px-4 py-1.5 transition-all focus-within:bg-white focus-within:shadow-sm border border-transparent focus-within:border-[#dadce0]">
+          {/* Search bar */}
+          <div className="flex-1 max-w-2xl">
+            <div className="flex w-full items-center rounded-full bg-[#eaf1fb] px-4 py-1.5 transition-all focus-within:bg-white focus-within:shadow-sm border border-transparent focus-within:border-[#dadce0]">
               <Search className="text-gsubtext mr-2" />
               <input
                 type="search"
@@ -162,7 +186,7 @@ const EmailLayout: React.FC = () => {
           </div>
 
           {/* Right-side actions */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 ml-auto">
             <IconButton size="small" aria-label="App launcher" className="text-gsubtext hover:bg-gray-200/60">
               <AppsOutlined />
             </IconButton>
@@ -203,66 +227,74 @@ const EmailLayout: React.FC = () => {
         setComposeParams={setComposeParams} 
       />
 
-      {/* Collapsible navigation menu */}
-      <nav
-        className="fixed top-16 py-3 bottom-0 left-0 z-20 flex flex-col bg-[#f6f8fc] border-r border-[#dadce0]/40 transition-all"
-        style={{ width: sidebarWidth }}
-      >
-        <Button
-          onClick={() => setOpenDialog(true)}
-          sx={composeButtonSx(openDrawer)}
+      {/* ── Body (below header) ── */}
+      <div className="flex" style={{ marginTop: 64, height: 'calc(100vh - 64px)' }}>
+
+        {/* Icon Rail — 8vw */}
+        <aside className="w-[8vw] shrink-0 flex flex-col items-center pt-3 bg-[#f6f8fc] border-r border-[#dadce0]/30 overflow-y-auto">
+          <Box sx={iconRailItemSx(true)}>
+            <MailOutlined sx={{ fontSize: 22 }} />
+            <Typography sx={{ fontSize: '11px', fontWeight: 600, lineHeight: 1.2 }}>Mail</Typography>
+          </Box>
+          <Box sx={iconRailItemSx(false)}>
+            <ChatBubbleOutline sx={{ fontSize: 22 }} />
+            <Typography sx={{ fontSize: '11px', fontWeight: 500, lineHeight: 1.2 }}>Chat</Typography>
+          </Box>
+          <Box sx={iconRailItemSx(false)}>
+            <VideocamOutlined sx={{ fontSize: 22 }} />
+            <Typography sx={{ fontSize: '11px', fontWeight: 500, lineHeight: 1.2 }}>Meet</Typography>
+          </Box>
+        </aside>
+
+        {/* Nav Sidebar — 15vw (collapsible) */}
+        <nav
+          className="shrink-0 flex flex-col bg-[#f6f8fc] py-3 overflow-y-auto transition-all border-r border-[#dadce0]/20"
+          style={{ width: openDrawer ? '15vw' : '0px', opacity: openDrawer ? 1 : 0, overflow: openDrawer ? 'visible' : 'hidden' }}
         >
-          {openDrawer ? (
-            <>
-              <AddIcon sx={{ mr: 1.5 }} />
-              <span>Compose</span>
-            </>
-          ) : (
-            <AddIcon />
-          )}
-        </Button>
-        <List sx={{ px: 0 }}>
-          {SIDEBAR_DATA.map((item) => {
-            const Icon = item.icon;
-            const selected = type === item.name;
-            return (
-              <ListItemButton
-                key={item.name}
-                component={NavLink}
-                to={`/emails/${item.name}`}
-                selected={selected}
-                sx={{
-                  ...sidebarItemSx,
-                  justifyContent: openDrawer ? 'flex-start' : 'center',
-                }}
-              >
-                <ListItemIcon
-                  sx={{
-                    minWidth: 0,
-                    mr: openDrawer ? 2 : 0,
-                    color: selected ? '#041e49' : '#444746',
-                  }}
+          <Button
+            onClick={() => setOpenDialog(true)}
+            sx={composeButtonSx}
+          >
+            <AddIcon sx={{ mr: 1.5 }} />
+            <span>Compose</span>
+          </Button>
+          <List sx={{ px: 0 }}>
+            {SIDEBAR_DATA.map((item) => {
+              const Icon = item.icon;
+              const selected = type === item.name;
+              return (
+                <ListItemButton
+                  key={item.name}
+                  component={NavLink}
+                  to={`/emails/${item.name}`}
+                  selected={selected}
+                  sx={sidebarItemSx}
                 >
-                  <Icon fontSize="small" />
-                </ListItemIcon>
-                {openDrawer && <ListItemText primary={item.title} sx={{ '& .MuiTypography-root': { fontWeight: selected ? 600 : 500 } }} />}
-              </ListItemButton>
-            );
-          })}
-        </List>
-      </nav>
+                  <ListItemIcon
+                    sx={{
+                      minWidth: 0,
+                      mr: 2,
+                      color: selected ? '#041e49' : '#444746',
+                    }}
+                  >
+                    <Icon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText primary={item.title} sx={{ '& .MuiTypography-root': { fontWeight: selected ? 600 : 500 } }} />
+                </ListItemButton>
+              );
+            })}
+          </List>
+        </nav>
 
-      {/* Main content */}
-      <main
-        className="transition-all bg-[#f6f8fc] overflow-hidden flex flex-col"
-        style={{ marginTop: 64, height: 'calc(100vh - 64px)' }}
-      >
-        <Suspense fallback={<Loader />}>
-          <Outlet context={{ openDrawer, sidebarWidth, selectedEmails, setSelectedEmails, setOpenDialog, composeParams, setComposeParams }} />
-        </Suspense>
-      </main>
+        {/* Main Content — remaining space */}
+        <main className="flex-1 overflow-hidden flex flex-col bg-[#f6f8fc] min-w-0">
+          <Suspense fallback={<Loader />}>
+            <Outlet context={{ openDrawer, selectedEmails, setSelectedEmails, setOpenDialog, composeParams, setComposeParams }} />
+          </Suspense>
+        </main>
+      </div>
 
-      {/* Account Dropdown Menu */}
+      {/* ── Account Dropdown Menu ── */}
       <Menu
         anchorEl={anchorEl}
         id="account-menu"
@@ -286,7 +318,6 @@ const EmailLayout: React.FC = () => {
         anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
       >
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 1.5 }}>
-          {/* Large Avatar */}
           <Avatar
             sx={{
               width: 56,

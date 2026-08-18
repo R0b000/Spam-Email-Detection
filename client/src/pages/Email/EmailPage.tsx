@@ -12,7 +12,6 @@ import { useAuth } from '../../context/AuthContext';
 
 interface OutletContext extends EmailOutletContext {
   openDrawer: boolean;
-  sidebarWidth: number;
   selectedEmails: string[];
   setSelectedEmails: React.Dispatch<React.SetStateAction<string[]>>;
   setOpenDialog: React.Dispatch<React.SetStateAction<boolean>>;
@@ -26,7 +25,7 @@ const EmailPage: React.FC = () => {
   const [starredSet, setStarredSet] = useState<Set<string>>(new Set());
 
   const { type = '' } = useParams();
-  const { sidebarWidth, selectedEmails, setSelectedEmails, setOpenDialog, setComposeParams } = useOutletContext<OutletContext>();
+  const { selectedEmails, setSelectedEmails, setOpenDialog, setComposeParams } = useOutletContext<OutletContext>();
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -212,8 +211,7 @@ const EmailPage: React.FC = () => {
       <Box
         className="transition-all flex flex-col"
         style={{
-          width: `calc(100% - ${sidebarWidth}px)`,
-          marginLeft: sidebarWidth,
+          width: '100%',
           padding: '12px 24px 24px 12px',
           boxSizing: 'border-box',
           height: '100%',

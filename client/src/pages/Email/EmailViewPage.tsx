@@ -12,7 +12,6 @@ interface ViewEmailState {
 }
 
 const EmailViewPage: React.FC = () => {
-  const { sidebarWidth } = useOutletContext<EmailOutletContext>();
   const { state } = useLocation();
   const { email, type } = state as ViewEmailState;
 
@@ -22,8 +21,7 @@ const EmailViewPage: React.FC = () => {
     <Box
       className="transition-all flex flex-col"
       style={{
-        width: `calc(100% - ${sidebarWidth}px)`,
-        marginLeft: sidebarWidth,
+        width: '100%',
         padding: '12px 24px 24px 12px',
         boxSizing: 'border-box',
         height: '100%',

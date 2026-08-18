@@ -360,7 +360,7 @@ const emailController = {
     
             if (type === 'inbox') {
                 // Retrieve messages where the receiver is the user
-                messages = await MessageModel.find({ receiver: user._id, type: 'sent', starred: false, bin: false });
+                messages = await MessageModel.find({ receiver: user._id, type: 'sent', starred: false, bin: false }).sort({ date: -1 });
             } else if (type === 'allmail') {
                 // Retrieve all messages where the user is either the sender or receiver, excluding drafts sent by other users
                 messages = await MessageModel.find({
@@ -369,22 +369,22 @@ const emailController = {
                         { receiver: user._id, type: { $nin: ['draft', 'spam'] } } // Find messages received by the user excluding drafts and spam messages
                     ],
                     bin: false // Exclude messages that are in the bin (trash)
-                });
+                }).sort({ date: -1 });
             } else if (type === 'starred') {
                 // Retrieve starred messages where the receiver or sender is the user
-                messages = await MessageModel.find({ $or: [{ sender: user._id }, { receiver: user._id }], starred: true, bin: false });
+                messages = await MessageModel.find({ $or: [{ sender: user._id }, { receiver: user._id }], starred: true, bin: false }).sort({ date: -1 });
             } else if (type === 'sent') {
                 // Retrieve messages where the sender is the user and type is either 'sent' or 'spam'
-                messages = await MessageModel.find({ sender: user._id, type: { $in: ['sent', 'spam'] }, starred: false, bin: false });
+                messages = await MessageModel.find({ sender: user._id, type: { $in: ['sent', 'spam'] }, starred: false, bin: false }).sort({ date: -1 });
             } else if (type === 'draft') {
                 // Retrieve draft messages where the sender is the user
-                messages = await MessageModel.find({ sender: user._id, type: 'draft', starred: false, bin: false });
+                messages = await MessageModel.find({ sender: user._id, type: 'draft', starred: false, bin: false }).sort({ date: -1 });
             } else if (type === 'spam') {
                 // Retrieve messages marked as spam for the user
-                messages = await MessageModel.find({ receiver: user._id, type: 'spam' });
+                messages = await MessageModel.find({ receiver: user._id, type: 'spam' }).sort({ date: -1 });
             } else {            
                 // Retrieve messages where the sender is the user and type matches
-                messages = await MessageModel.find({ sender: user._id, type: type });
+                messages = await MessageModel.find({ sender: user._id, type: type }).sort({ date: -1 });
             }
     
             if (messages.length === 0) {
@@ -633,7 +633,7 @@ const emailController = {
                 ]
             };
 
-            const messages = await MessageModel.find(finalFilter);
+            const messages = await MessageModel.find(finalFilter).sort({ date: -1 });
 
             const mappedMessages = await Promise.all(messages.map(async (message) => {
                 let receiverEmail = '';

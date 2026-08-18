@@ -14,9 +14,10 @@ interface FloatInputProps {
   onChange: (value: string) => void;
   error?: string;
   autoComplete?: string;
+  autoFocus?: boolean;
 }
 
-const FloatInput = ({ type, id, label, value, onChange, error, autoComplete }: FloatInputProps) => {
+const FloatInput = ({ type, id, label, value, onChange, error, autoComplete, autoFocus }: FloatInputProps) => {
   return (
     <div className="relative mb-2 text-left">
       <input
@@ -25,6 +26,7 @@ const FloatInput = ({ type, id, label, value, onChange, error, autoComplete }: F
         value={value}
         placeholder={label}
         autoComplete={autoComplete}
+        autoFocus={autoFocus}
         onChange={(e) => onChange(e.target.value)}
         className={`peer h-[54px] w-full rounded border bg-transparent px-3 text-base text-gtext transition-all duration-150 outline-none placeholder-transparent focus:border-brand-blue ${
           error ? 'border-red-600' : 'border-gborder'
@@ -137,7 +139,7 @@ const Login: React.FC = () => {
           <p className="mb-8 mt-2 text-base text-gsubtext">to continue to Email</p>
 
           <form onSubmit={goToPasswordStep} noValidate>
-            <FloatInput type="text" id="identifierId" label="Email" value={email} onChange={setEmail} error={error ?? ''} autoComplete="username" />
+            <FloatInput type="text" id="identifierId" label="Email" value={email} onChange={setEmail} error={error ?? ''} autoComplete="username" autoFocus />
             <button type="button" className="text-left text-sm font-semibold text-brand-blue">Forgot email?</button>
             <p className="mt-5 text-left text-sm leading-relaxed text-gsubtext">
               Not your computer? Use Guest mode to sign in privately.
@@ -175,6 +177,7 @@ const Login: React.FC = () => {
               <input
                 id="password"
                 type={passwordVisible ? 'text' : 'password'}
+                autoFocus
                 value={password}
                 autoComplete="current-password"
                 onChange={(e) => setPassword(e.target.value)}

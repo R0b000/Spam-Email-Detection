@@ -79,14 +79,25 @@ const Login: React.FC = () => {
     }
   }, [isAuthenticated, navigate]);
 
-  const goToPasswordStep = (e: React.FormEvent) => {
+  const goToPasswordStep = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) {
       setError('Enter an email or phone number');
       return;
     }
     setError(null);
-    setStep('password');
+    setLoading(true);
+    try {
+      const result = await authController.checkEmail(email.trim());
+      // Email found — store the name and move to password step
+      setName(result.name || '');
+      setStep('password');
+    } catch (err: any) {
+      const errMsg = err.response?.data?.error || "Couldn't find your Email Account";
+      setError(errMsg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleLogin = async (e: React.FormEvent) => {

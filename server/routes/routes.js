@@ -20,5 +20,6 @@ routes.post('/detect', emailController.detectspam);
 routes.get('/unread-count', emailController.getUnreadCount);
 routes.get('/search-emails', emailController.searchEmails);
 routes.get('/users', emailController.getUsers);
+routes.post('/verify-recipients', emailController.verifyRecipients);
 
 module.exports = routes;

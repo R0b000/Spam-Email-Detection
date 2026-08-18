@@ -108,29 +108,79 @@ const emailController = {
                 return res.status(400).json({ error: 'Receiver email is required' });
             }
 
+            const senderUser = await UserModel.findById(senderId);
+            const senderEmail = senderUser ? senderUser.email : '';
+
             let createdMessages = [];
             for (const rEmail of receiverEmails) {
                 const receiver = await UserModel.findOne({ email: rEmail });
-                const receiverId = receiver ? receiver._id : null;
+                if (receiver) {
+                    const message = await MessageModel.create({
+                        sender: senderId,
+                        receiver: receiver._id,
+                        receiverEmail: rEmail,
+                        subject: content?.subject || null,
+                        body: content?.body || null,
+                        attachment: content?.attachment || null,
+                        date: new Date(),
+                        starred: false,
+                        bin: false,
+                        isSpam: isSpam || false,
+                        type: type || 'sent',
+                    });
+                    createdMessages.push(message);
+                } else {
+                    // Save copy in Sent for sender visibility
+                    const message = await MessageModel.create({
+                        sender: senderId,
+                        receiver: null,
+                        receiverEmail: rEmail,
+                        subject: content?.subject || null,
+                        body: content?.body || null,
+                        attachment: content?.attachment || null,
+                        date: new Date(),
+                        starred: false,
+                        bin: false,
+                        isSpam: isSpam || false,
+                        type: type || 'sent',
+                    });
+                    createdMessages.push(message);
 
-                const message = await MessageModel.create({
-                    sender: senderId,
-                    receiver: receiverId,
-                    receiverEmail: rEmail,
-                    subject: content?.subject || null,
-                    body: content?.body || null,
-                    attachment: content?.attachment || null,
-                    date: new Date(),
-                    starred: false,
-                    bin: false,
-                    isSpam: isSpam || false,
-                    type: type || 'sent',
-                });
-                createdMessages.push(message);
+                    // Asynchronously create bounce-back notification from noreply@email.com
+                    setImmediate(async () => {
+                        try {
+                            let daemonUser = await UserModel.findOne({ email: 'noreply@email.com' });
+                            if (!daemonUser) {
+                                daemonUser = await UserModel.create({
+                                    name: 'noreply',
+                                    email: 'noreply@email.com',
+                                    password: 'system-virtual-account-no-login',
+                                    role: 'user'
+                                });
+                            }
+
+                            await MessageModel.create({
+                                sender: daemonUser._id,
+                                receiver: senderId,
+                                receiverEmail: senderEmail,
+                                subject: 'Delivery Status Notification (Failure)',
+                                body: `Address not found. Your message to "${rEmail}" was not delivered because the address could not be found or is not registered.`,
+                                date: new Date(),
+                                starred: false,
+                                bin: false,
+                                isRead: false,
+                                isSpam: false,
+                                type: 'sent'
+                            });
+                        } catch (err) {
+                            console.error('Failed to generate bounce-back email:', err);
+                        }
+                    });
+                }
             }
     
             console.log('Messages sent successfully:', createdMessages);
-            res.json({ message: 'Messages sent successfully', data: createdMessages[0] });
+            res.json({ message: 'Messages sent successfully', data: createdMessages[0] || null });
         } catch (error) {
             console.error('Error sending message:', error.message);
             res.status(500).json({ error: 'Internal Server Error' });
@@ -212,29 +262,79 @@ const emailController = {
                 return res.status(400).json({ error: 'Receiver email is required' });
             }
 
+            const senderUser = await UserModel.findById(senderId);
+            const senderEmail = senderUser ? senderUser.email : '';
+
             let createdMessages = [];
             for (const rEmail of receiverEmails) {
                 const receiver = await UserModel.findOne({ email: rEmail });
-                const receiverId = receiver ? receiver._id : null;
+                if (receiver) {
+                    const message = await MessageModel.create({
+                        sender: senderId,
+                        receiver: receiver._id,
+                        receiverEmail: rEmail,
+                        subject: content?.subject || null,
+                        body: content?.body || null,
+                        attachment: content?.attachment || null,
+                        date: new Date(),
+                        starred: false,
+                        bin: false,
+                        isSpam: true,
+                        type: 'spam',
+                    });
+                    createdMessages.push(message);
+                } else {
+                    // Save copy in Sent for sender visibility
+                    const message = await MessageModel.create({
+                        sender: senderId,
+                        receiver: null,
+                        receiverEmail: rEmail,
+                        subject: content?.subject || null,
+                        body: content?.body || null,
+                        attachment: content?.attachment || null,
+                        date: new Date(),
+                        starred: false,
+                        bin: false,
+                        isSpam: true,
+                        type: 'spam',
+                    });
+                    createdMessages.push(message);
 
-                const message = await MessageModel.create({
-                    sender: senderId,
-                    receiver: receiverId,
-                    receiverEmail: rEmail,
-                    subject: content?.subject || null,
-                    body: content?.body || null,
-                    attachment: content?.attachment || null,
-                    date: new Date(),
-                    starred: false,
-                    bin: false,
-                    isSpam: true,
-                    type: 'spam',
-                });
-                createdMessages.push(message);
+                    // Asynchronously create bounce-back notification from noreply@email.com
+                    setImmediate(async () => {
+                        try {
+                            let daemonUser = await UserModel.findOne({ email: 'noreply@email.com' });
+                            if (!daemonUser) {
+                                daemonUser = await UserModel.create({
+                                    name: 'noreply',
+                                    email: 'noreply@email.com',
+                                    password: 'system-virtual-account-no-login',
+                                    role: 'user'
+                                });
+                            }
+
+                            await MessageModel.create({
+                                sender: daemonUser._id,
+                                receiver: senderId,
+                                receiverEmail: senderEmail,
+                                subject: 'Delivery Status Notification (Failure)',
+                                body: `Address not found. Your message to "${rEmail}" was not delivered because the address could not be found or is not registered.`,
+                                date: new Date(),
+                                starred: false,
+                                bin: false,
+                                isRead: false,
+                                isSpam: false,
+                                type: 'sent'
+                            });
+                        } catch (err) {
+                            console.error('Failed to generate bounce-back email:', err);
+                        }
+                    });
+                }
             }
     
             console.log('Messages sent successfully:', createdMessages);
-            res.json({ message: 'Messages sent successfully', data: createdMessages[0] });
+            res.json({ message: 'Messages sent successfully', data: createdMessages[0] || null });
         } catch (error) {
             console.error('Error sending message:', error.message);
             res.status(500).json({ error: 'Internal Server Error' });
@@ -563,8 +663,9 @@ const emailController = {
 
     getUsers: async (request, response) => {
         try {
-            const { query } = request.query;
+            const { query, excludeEmail } = request.query;
             let filter = {};
+            
             if (query) {
                 const regex = new RegExp(query, 'i');
                 filter = {
@@ -574,10 +675,47 @@ const emailController = {
                     ]
                 };
             }
+
+            if (excludeEmail) {
+                if (filter.$or) {
+                    filter = {
+                        $and: [
+                            { email: { $ne: excludeEmail } },
+                            { $or: filter.$or }
+                        ]
+                    };
+                } else {
+                    filter.email = { $ne: excludeEmail };
+                }
+            }
+
             const users = await UserModel.find(filter).limit(10).select('name email');
             response.status(200).json({ data: users });
         } catch (error) {
             console.error('Error fetching users:', error);
+            response.status(500).json({ error: 'Internal Server Error', message: error.message });
+        }
+    },
+
+    verifyRecipients: async (request, response) => {
+        try {
+            const { emails } = request.body;
+            if (!Array.isArray(emails)) {
+                return response.status(400).json({ error: 'emails must be an array' });
+            }
+            const valid = [];
+            const invalid = [];
+            for (const email of emails) {
+                const user = await UserModel.findOne({ email });
+                if (user) {
+                    valid.push(email);
+                } else {
+                    invalid.push(email);
+                }
+            }
+            response.status(200).json({ valid, invalid });
+        } catch (error) {
+            console.error('Error verifying recipients:', error);
             response.status(500).json({ error: 'Internal Server Error', message: error.message });
         }
     }

@@ -190,6 +190,10 @@ const ComposeMail = ({ openDialog, setOpenDialog, composeParams, setComposeParam
     }
   }, [composeParams, openDialog]);
 
+  const { user } = useAuth();
+  const userEmail = user?.email ?? null;
+  const userName = user?.name ?? null;
+
   React.useEffect(() => {
     if (!inputValue.trim()) {
       setUserSuggestions([]);
@@ -197,24 +201,36 @@ const ComposeMail = ({ openDialog, setOpenDialog, composeParams, setComposeParam
     }
     const fetchUsers = async () => {
       try {
-        const response = await httpClient.get(`/users?query=${inputValue}`);
+        const response = await httpClient.get(`/users?query=${inputValue}&excludeEmail=${userEmail}`);
         const resData = response.data as { data: { name: string; email: string }[] };
-        setUserSuggestions(resData.data || []);
+        
+        let list = resData.data || [];
+        
+        // Add dynamic email suggestion if input does not end with "@email.com"
+        const trimmed = inputValue.trim();
+        if (trimmed && !trimmed.toLowerCase().endsWith('@email.com')) {
+          const prefix = trimmed.includes('@') ? trimmed.split('@')[0] : trimmed;
+          if (prefix) {
+            const suggestedEmail = `${prefix}@email.com`;
+            // Avoid adding duplicates if already present in user suggestions
+            if (!list.some(item => item.email.toLowerCase() === suggestedEmail.toLowerCase())) {
+              list = [{ name: `Use "${suggestedEmail}"`, email: suggestedEmail }, ...list];
+            }
+          }
+        }
+        
+        setUserSuggestions(list);
       } catch (err) {
         console.error('Error fetching user suggestions:', err);
       }
     };
     const timeoutId = setTimeout(fetchUsers, 200);
     return () => clearTimeout(timeoutId);
-  }, [inputValue]);
+  }, [inputValue, userEmail]);
 
   const sendMessageServices = API_URLS.savesendEmails;
   const saveDraftService = API_URLS.saveDraftEmails;
   const saveSpamServices = API_URLS.saveSpamEmails;
-
-  const { user } = useAuth();
-  const userEmail = user?.email ?? null;
-  const userName = user?.name ?? null;
 
   const onValueChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, fieldName: string) => {
     if (fieldName === 'subject') {
@@ -235,6 +251,42 @@ const ComposeMail = ({ openDialog, setOpenDialog, composeParams, setComposeParam
     // Run sending process in background
     (async () => {
       try {
+        // 1. Verify recipients
+        const verifyRes = await httpClient.post('/verify-recipients', { emails: selectedRecipients });
+        const { valid } = verifyRes.data as { valid: string[]; invalid: string[] };
+
+        // 2. If no valid recipients exist, skip spam detection
+        if (valid.length === 0) {
+          const payload = {
+            senderId: userEmail,
+            receiverEmail: selectedRecipients,
+            content: {
+              subject: data.subject,
+              body: data.body,
+              attachment: attachment || null,
+            },
+            name: userName,
+            date: new Date(),
+            starred: false,
+            bin: false,
+            isSpam: false,
+            type: 'sent',
+          };
+          const res = await httpClient.post(sendMessageServices.endpoint, payload);
+          showSuccessToast(res.data?.message || 'Email sent.');
+
+          // Clean up the draft document if we sent it
+          if (composeParams?.type === 'draft' && draftId) {
+            try {
+              await httpClient.delete(`/emails/${draftId}`);
+            } catch (deleteError) {
+              console.error('Error cleaning up draft after sending:', deleteError);
+            }
+          }
+          return;
+        }
+
+        // 3. Otherwise, run spam detection for valid recipients
         const spamDetectionResponse = await httpClient.post('/detect', {
           emailSubject: data.subject,
           emailBody: data.body,
@@ -479,7 +531,17 @@ const ComposeMail = ({ openDialog, setOpenDialog, composeParams, setComposeParam
           getOptionLabel={(option) => (typeof option === 'string' ? option : option.email)}
           value={selectedRecipients}
           onChange={(_, newValue) => {
-            const emails = newValue.map((val) => (typeof val === 'string' ? val : val.email));
+            const emails = newValue.map((val) => {
+              if (typeof val === 'string') {
+                const trimmed = val.trim();
+                if (trimmed && !trimmed.toLowerCase().endsWith('@email.com')) {
+                  const prefix = trimmed.includes('@') ? trimmed.split('@')[0] : trimmed;
+                  return `${prefix}@email.com`;
+                }
+                return trimmed;
+              }
+              return val.email;
+            });
             setSelectedRecipients(emails);
           }}
           inputValue={inputValue}
@@ -508,6 +570,7 @@ const ComposeMail = ({ openDialog, setOpenDialog, composeParams, setComposeParam
                 <input
                   {...params.inputProps}
                   {...rest}
+                  autoFocus
                   placeholder={selectedRecipients.length === 0 ? "Recipients" : ""}
                   className="flex-1 min-w-[120px] border-none outline-none text-sm text-gtext bg-transparent py-1.5"
                 />

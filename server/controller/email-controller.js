@@ -488,23 +488,19 @@ const emailController = {
                 };
             }
 
-            // Apply role constraints
-            let finalFilter = {};
-            if (user.role === 'admin') {
-                finalFilter = filter;
-            } else {
-                finalFilter = {
-                    $and: [
-                        {
-                            $or: [
-                                	{ sender: user._id },
-                                	{ receiver: user._id }
-                            ]
-                        },
-                        filter
-                    ]
-                };
-            }
+            // Apply strict user ownership constraints in all cases
+            const finalFilter = {
+                $and: [
+                    {
+                        $or: [
+                            { sender: user._id },
+                            { receiver: user._id },
+                            { receiverEmail: user.email }
+                        ]
+                    },
+                    filter
+                ]
+            };
 
             const messages = await MessageModel.find(finalFilter);
 

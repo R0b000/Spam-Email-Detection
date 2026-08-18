@@ -17,6 +17,8 @@ interface OutletContext extends EmailOutletContext {
   setOpenDialog: React.Dispatch<React.SetStateAction<boolean>>;
   composeParams: any;
   setComposeParams: React.Dispatch<React.SetStateAction<any>>;
+  unreadCount?: number;
+  fetchUnreadCount?: () => Promise<void>;
 }
 
 const EmailPage: React.FC = () => {
@@ -25,7 +27,7 @@ const EmailPage: React.FC = () => {
   const [starredSet, setStarredSet] = useState<Set<string>>(new Set());
 
   const { type = '' } = useParams();
-  const { selectedEmails, setSelectedEmails, setOpenDialog, setComposeParams } = useOutletContext<OutletContext>();
+  const { selectedEmails, setSelectedEmails, setOpenDialog, setComposeParams, fetchUnreadCount } = useOutletContext<OutletContext>();
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -291,6 +293,7 @@ const EmailPage: React.FC = () => {
                   if (!row.isRead) {
                     try {
                       await httpClient.put('/read', { id: row._id, value: true });
+                      if (fetchUnreadCount) fetchUnreadCount();
                     } catch (error) {
                       console.error('Error marking email as read:', error);
                     }

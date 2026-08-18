@@ -17,5 +17,6 @@ routes.put('/emails/:id', emailController.updateEmail);
 routes.delete('/emails/:id', emailController.deleteEmail);
 routes.post('/spam', emailController.saveSpamEmails);
 routes.post('/detect', emailController.detectspam);
+routes.get('/unread-count', emailController.getUnreadCount);
 
 module.exports = routes;

@@ -404,6 +404,41 @@
                 console.error('Error deleting email:', error);
                 response.status(500).json({ error: 'Internal Server Error' });
             }
+        },
+
+        getUnreadCount: async (request, response) => {
+            try {
+                const { userEmail } = request.query;
+                if (!userEmail) {
+                    return response.status(400).json({ error: 'User email is not provided' });
+                }
+                const user = await UserModel.findOne({ email: userEmail });
+                if (!user) {
+                    return response.status(404).json({ error: 'User not found' });
+                }
+
+                let query = {};
+                if (user.role === 'admin') {
+                    query = {
+                        isRead: false,
+                        bin: false,
+                        type: 'sent'
+                    };
+                } else {
+                    query = {
+                        receiver: user._id,
+                        isRead: false,
+                        bin: false,
+                        type: 'sent'
+                    };
+                }
+
+                const count = await MessageModel.countDocuments(query);
+                response.status(200).json({ count, role: user.role });
+            } catch (error) {
+                console.error('Error fetching unread count:', error);
+                response.status(500).json({ error: 'Internal Server Error', message: error.message });
+            }
         }
 
     };

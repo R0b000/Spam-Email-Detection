@@ -30,4 +30,8 @@ export const API_URLS: Record<string, ServiceUrlObject> = {
     endpoint: 'spam',
     method: 'POST',
   },
+  getUnreadCount: {
+    endpoint: 'unread-count',
+    method: 'GET',
+  },
 };

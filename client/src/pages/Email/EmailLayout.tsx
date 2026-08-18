@@ -13,6 +13,7 @@ import {
   MenuItem,
   Divider,
   Box,
+  Badge,
 } from '@mui/material';
 import type { SxProps } from '@mui/material';
 import {
@@ -27,6 +28,7 @@ import {
   ManageAccountsOutlined,
   LogoutOutlined,
   VideocamOutlined,
+  NotificationsOutlined,
 } from '@mui/icons-material';
 import { SIDEBAR_DATA } from '../../config/sidebar.config';
 import { useAuth } from '../../context/AuthContext';
@@ -116,6 +118,8 @@ const EmailLayout: React.FC = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedEmails, setSelectedEmails] = useState<string[]>([]);
   const [composeParams, setComposeParams] = useState<any>(null);
+  const [unreadCount, setUnreadCount] = useState<number>(0);
+  const [userRole, setUserRole] = useState<string>('user');
   const { user, logout } = useAuth();
   const { type = '' } = useParams();
   const navigate = useNavigate();
@@ -126,6 +130,32 @@ const EmailLayout: React.FC = () => {
     user?.name?.trim().charAt(0).toUpperCase() ||
     user?.email?.trim().charAt(0).toUpperCase() ||
     '?';
+
+  const fetchUnreadCount = React.useCallback(async () => {
+    try {
+      const userEmail = user?.email;
+      if (!userEmail) return;
+      const response = await httpClient.get(`/unread-count?userEmail=${userEmail}`);
+      const data = response.data as { count: number; role: string };
+      setUnreadCount(data.count || 0);
+      setUserRole(data.role || 'user');
+    } catch (error) {
+      console.error('Error fetching unread count:', error);
+    }
+  }, [user?.email]);
+
+  React.useEffect(() => {
+    fetchUnreadCount();
+
+    // Poll every 5 seconds
+    const intervalId = setInterval(() => {
+      fetchUnreadCount();
+    }, 5000);
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [fetchUnreadCount]);
 
   const toggleDrawer = () => setOpenDrawer((prev) => !prev);
 
@@ -195,6 +225,11 @@ const EmailLayout: React.FC = () => {
             </IconButton>
             <IconButton size="small" aria-label="Settings" className="text-gsubtext hover:bg-gray-200/60">
               <SettingsOutlined />
+            </IconButton>
+            <IconButton size="small" aria-label="Notifications" className="text-gsubtext hover:bg-gray-200/60">
+              <Badge badgeContent={unreadCount} color="error">
+                <NotificationsOutlined />
+              </Badge>
             </IconButton>
             <Avatar
               onClick={handleAvatarClick}
@@ -280,6 +315,22 @@ const EmailLayout: React.FC = () => {
                     <Icon fontSize="small" />
                   </ListItemIcon>
                   <ListItemText primary={item.title} sx={{ '& .MuiTypography-root': { fontWeight: selected ? 600 : 500 } }} />
+                  {item.name === 'inbox' && unreadCount > 0 && (
+                    <Typography
+                      sx={{
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        color: selected ? '#041e49' : '#1a73e8',
+                        ml: 'auto',
+                        backgroundColor: selected ? '#c2e7ff' : '#eaf1fb',
+                        px: 1,
+                        py: 0.25,
+                        borderRadius: '10px',
+                      }}
+                    >
+                      {unreadCount}
+                    </Typography>
+                  )}
                 </ListItemButton>
               );
             })}
@@ -289,7 +340,7 @@ const EmailLayout: React.FC = () => {
         {/* Main Content — remaining space */}
         <main className="flex-1 overflow-hidden flex flex-col bg-[#f6f8fc] min-w-0">
           <Suspense fallback={<Loader />}>
-            <Outlet context={{ openDrawer, selectedEmails, setSelectedEmails, setOpenDialog, composeParams, setComposeParams }} />
+            <Outlet context={{ openDrawer, selectedEmails, setSelectedEmails, setOpenDialog, composeParams, setComposeParams, unreadCount, fetchUnreadCount }} />
           </Suspense>
         </main>
       </div>
@@ -331,7 +382,7 @@ const EmailLayout: React.FC = () => {
             {initial}
           </Avatar>
           <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#202124', mb: 0.25 }}>
-            {user?.name || 'User'}
+            {user?.name || 'User'} {userRole && `(${userRole.toUpperCase()})`}
           </Typography>
           <Typography variant="body2" sx={{ color: '#5f6368', mb: 2 }}>
             {user?.email || ''}

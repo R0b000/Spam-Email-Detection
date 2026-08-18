@@ -4,6 +4,8 @@ export interface Attachment {
   content?: string;
   src?: string;
   alt?: string;
+  path?: string;
+  size?: number;
 }
 
 export interface Mail {

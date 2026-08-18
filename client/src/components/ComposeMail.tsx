@@ -1,12 +1,24 @@
 import React, { useState } from 'react';
-import { Paper, Box, Typography, styled, InputBase, TextField, Button, Autocomplete, Chip, Avatar } from '@mui/material';
-import { Close, DeleteOutlined, AttachFile } from '@mui/icons-material';
+import { Paper, Box, Typography, styled, InputBase, TextField, Button, Autocomplete, Chip, Avatar, Popover, CircularProgress } from '@mui/material';
+import { Close, DeleteOutlined, AttachFile, InsertEmoticonOutlined, InsertDriveFileOutlined } from '@mui/icons-material';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from './Toaster/Toaster';
 import httpClient from '../Configuration/axios';
 import { API_URLS } from '../Manager/Service/api.urls';
 import { Attachment, Mail } from '../Model/ResponseModel/EmailModel/EmailResponseModel';
+
+const EMOJIS = [
+  '😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😊', '😇',
+  '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚',
+  '😋', '😛', '😝', '😜', '🤪', '🤨', '🧐', '🤓', '😎', '🥸',
+  '🤩', '🥳', '😏', '😒', '😞', '😔', '😟', '😕', '🙁', '☹️',
+  '😣', '😖', '😫', '😩', '🥺', '😢', '😭', '😤', '😠', '😡',
+  '🤬', '🤯', '😳', '🥵', '🥶', '😱', '😨', '😰', '😥', '😓',
+  '🤗', '🤔', '🫣', '🤭', '🫢', '🫡', '🤫', '🫠', '✍️', '👍',
+  '👎', '👊', '👋', '👏', '🙌', '🤝', '🙏', '❤️', '💖', '🔥',
+  '✨', '🎉', '🚀'
+];
 
 const dialogStyle: React.CSSProperties = {
   position: 'fixed',
@@ -166,6 +178,9 @@ const ComposeMail = ({ openDialog, setOpenDialog, composeParams, setComposeParam
   const [data, setData] = useState<any>({});
   const [draftId, setDraftId] = useState<string | null>(null);
   const [userSuggestions, setUserSuggestions] = useState<{ name: string; email: string }[]>([]);
+  const [uploadingFile, setUploadingFile] = useState(false);
+  const [emojiAnchor, setEmojiAnchor] = useState<HTMLButtonElement | null>(null);
+  const bodyRef = React.useRef<HTMLTextAreaElement | null>(null);
   const [inputValue, setInputValue] = useState('');
   const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
 
@@ -466,26 +481,65 @@ const ComposeMail = ({ openDialog, setOpenDialog, composeParams, setComposeParam
   const handleAttachFileClick = () => {
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
-    fileInput.addEventListener('change', (event) => {
+    fileInput.addEventListener('change', async (event) => {
       const target = event.target as HTMLInputElement;
       const file = target.files?.[0];
       if (file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          setAttachment({
-            name: file.name,
-            type: file.type,
-            content: (e.target?.result as string).split(',')[1],
+        setUploadingFile(true);
+        const formData = new FormData();
+        formData.append('file', file);
+        try {
+          const response = await httpClient.post('/upload', formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
           });
-        };
-        reader.readAsDataURL(file);
+          const resData = response.data as { name: string; path: string; size: number; type: string };
+          setAttachment({
+            name: resData.name,
+            path: resData.path,
+            size: resData.size,
+            type: resData.type
+          });
+        } catch (err) {
+          console.error('Error uploading file:', err);
+          showErrorToast('Failed to upload file. Please try again.');
+        } finally {
+          setUploadingFile(false);
+        }
       }
     });
     fileInput.click();
   };
 
-  const handleRemoveAttachment = () => {
-    setAttachment(null);
+  const handleRemoveAttachment = async () => {
+    if (attachment && attachment.path) {
+      const pathToDelete = attachment.path;
+      setAttachment(null);
+      try {
+        await httpClient.delete('/delete-file', { data: { filePath: pathToDelete } });
+      } catch (err) {
+        console.error('Error deleting file on server:', err);
+      }
+    } else {
+      setAttachment(null);
+    }
+  };
+
+  const insertEmoji = (emoji: string) => {
+    const textarea = bodyRef.current;
+    if (!textarea) return;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = data.body || '';
+    const before = text.substring(0, start);
+    const after = text.substring(end, text.length);
+    const nextBody = before + emoji + after;
+    setData({ ...data, body: nextBody });
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start + emoji.length, start + emoji.length);
+    }, 0);
   };
 
   const handleDelete = () => {
@@ -494,23 +548,58 @@ const ComposeMail = ({ openDialog, setOpenDialog, composeParams, setComposeParam
     setOpenDialog(false);
   };
 
+  const formatFileSize = (bytes?: number) => {
+    if (!bytes) return '';
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
   const renderAttachment = () => {
-    if (attachment && attachment.name && attachment.type && attachment.content) {
+    if (uploadingFile) {
       return (
-        <StyledAttachmentContainer>
-          <p>Attached File: {attachment.name}</p>
-          <p>File Type: {attachment.type}</p>
-          {attachment.type.startsWith('image') ? (
-            <img src={`data:${attachment.type};base64,${attachment.content}`} alt={attachment.name} />
-          ) : (
-            <a href={`data:${attachment.type};base64,${attachment.content}`} download={attachment.name}>
-              Download {attachment.name}
-            </a>
-          )}
-          <div>
-            <Button onClick={handleRemoveAttachment}>Remove Attachment</Button>
-          </div>
-        </StyledAttachmentContainer>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 2, p: 1, border: '1px dashed #dadce0', borderRadius: '8px', maxWidth: '300px' }}>
+          <CircularProgress size={20} />
+          <Typography variant="body2" color="textSecondary">Uploading file...</Typography>
+        </Box>
+      );
+    }
+    if (attachment && attachment.name) {
+      return (
+        <Box 
+          sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'space-between',
+            gap: 1.5, 
+            mt: 2, 
+            p: '8px 12px', 
+            border: '1px solid #dadce0', 
+            borderRadius: '16px', 
+            maxWidth: '350px',
+            backgroundColor: '#f8f9fa'
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
+            <InsertDriveFileOutlined sx={{ color: '#5f6368', flexShrink: 0 }} />
+            <Box sx={{ minWidth: 0 }}>
+              <Typography variant="body2" noWrap sx={{ fontWeight: 500, color: '#202124' }}>
+                {attachment.name}
+              </Typography>
+              {attachment.size && (
+                <Typography variant="caption" color="textSecondary">
+                  {formatFileSize(attachment.size)}
+                </Typography>
+              )}
+            </Box>
+          </Box>
+          <Button 
+            onClick={handleRemoveAttachment} 
+            sx={{ minWidth: 0, p: 0.5, borderRadius: '50%', color: '#5f6368', '&:hover': { backgroundColor: 'rgba(0,0,0,0.05)' } }}
+          >
+            <Close sx={{ fontSize: 18 }} />
+          </Button>
+        </Box>
       );
     }
     return null;
@@ -552,18 +641,21 @@ const ComposeMail = ({ openDialog, setOpenDialog, composeParams, setComposeParam
             setInputValue(newInputValue);
           }}
           renderTags={(value, getTagProps) =>
-            value.map((option, index) => (
-              <Chip
-                variant="outlined"
-                label={option}
-                size="small"
-                {...getTagProps({ index })}
-                sx={{ margin: '2px 4px 2px 0' }}
-              />
-            ))
+            value.map((option, index) => {
+              const labelText = typeof option === 'string' ? option : option.email;
+              return (
+                <Chip
+                  variant="outlined"
+                  label={labelText}
+                  size="small"
+                  {...getTagProps({ index })}
+                  sx={{ margin: '2px 4px 2px 0' }}
+                />
+              );
+            })
           }
           renderInput={(params) => {
-            const { InputLabelProps, InputProps, ...rest } = params;
+            const { InputLabelProps, InputProps, size, ...rest } = params;
             return (
               <Box 
                 ref={params.InputProps.ref} 
@@ -607,6 +699,7 @@ const ComposeMail = ({ openDialog, setOpenDialog, composeParams, setComposeParam
           fullWidth
           placeholder="Compose email..."
           minRows={8}
+          inputRef={bodyRef}
           sx={{
             '& .MuiOutlinedInput-notchedOutline': {
               border: 'none',
@@ -628,10 +721,49 @@ const ComposeMail = ({ openDialog, setOpenDialog, composeParams, setComposeParam
           )}
         </Box>
         <IconWrapper>
-          <AttachFile onClick={handleAttachFileClick} />
-          <DeleteOutlined onClick={handleDelete} />
+          <AttachFile onClick={handleAttachFileClick} style={{ cursor: 'pointer' }} />
+          <InsertEmoticonOutlined 
+            onClick={(e) => setEmojiAnchor(e.currentTarget as any)} 
+            style={{ cursor: 'pointer', marginLeft: 12 }} 
+          />
+          <DeleteOutlined onClick={handleDelete} style={{ cursor: 'pointer', marginLeft: 12 }} />
         </IconWrapper>
       </Footer>
+      <Popover
+        open={Boolean(emojiAnchor)}
+        anchorEl={emojiAnchor}
+        onClose={() => setEmojiAnchor(null)}
+        anchorOrigin={{
+          vertical: 'top',
+          horizontal: 'center',
+        }}
+        transformOrigin={{
+          vertical: 'bottom',
+          horizontal: 'center',
+        }}
+        PaperProps={{
+          sx: { p: 1, maxWidth: '280px', maxHeight: '200px', overflowY: 'auto' }
+        }}
+      >
+        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: 0.5 }}>
+          {EMOJIS.map((emoji) => (
+            <Button
+              key={emoji}
+              onClick={() => insertEmoji(emoji)}
+              sx={{ 
+                minWidth: 0, 
+                p: 0.5, 
+                fontSize: '18px', 
+                borderRadius: '4px',
+                color: 'initial',
+                '&:hover': { backgroundColor: '#f1f3f4' } 
+              }}
+            >
+              {emoji}
+            </Button>
+          ))}
+        </Box>
+      </Popover>
     </Paper>
   );
 };

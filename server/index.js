@@ -8,6 +8,9 @@ const Connection = require('./database/db.js');
 const routes = require('./routes/routes');
 
 const app = express();
+const path = require('path');
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json({ extended: true }));
 app.use(cors());

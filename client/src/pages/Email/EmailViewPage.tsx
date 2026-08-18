@@ -39,6 +39,9 @@ const EmailViewPage: React.FC = () => {
 
   const getAttachmentSrc = () => {
     if (!email.attachment) return '';
+    if (email.attachment.path) {
+      return `http://localhost:3001${email.attachment.path}`;
+    }
     if (email.attachment.content) {
       return `data:${email.attachment.type};base64,${email.attachment.content}`;
     }

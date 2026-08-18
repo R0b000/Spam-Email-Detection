@@ -212,9 +212,12 @@ const ComposeMail = ({ openDialog, setOpenDialog, composeParams, setComposeParam
           const prefix = trimmed.includes('@') ? trimmed.split('@')[0] : trimmed;
           if (prefix) {
             const suggestedEmail = `${prefix}@email.com`;
-            // Avoid adding duplicates if already present in user suggestions
-            if (!list.some(item => item.email.toLowerCase() === suggestedEmail.toLowerCase())) {
-              list = [{ name: `Use "${suggestedEmail}"`, email: suggestedEmail }, ...list];
+            // Avoid adding duplicates if already present in user suggestions, and exclude user's own email
+            if (
+              suggestedEmail.toLowerCase() !== userEmail?.toLowerCase() &&
+              !list.some(item => item.email.toLowerCase() === suggestedEmail.toLowerCase())
+            ) {
+              list = [{ name: suggestedEmail, email: suggestedEmail }, ...list];
             }
           }
         }

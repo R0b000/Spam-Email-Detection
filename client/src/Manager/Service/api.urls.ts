@@ -34,4 +34,8 @@ export const API_URLS: Record<string, ServiceUrlObject> = {
     endpoint: 'unread-count',
     method: 'GET',
   },
+  searchEmails: {
+    endpoint: 'search-emails',
+    method: 'GET',
+  },
 };

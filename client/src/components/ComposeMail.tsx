@@ -292,17 +292,8 @@ const ComposeMail = ({ openDialog, setOpenDialog, composeParams, setComposeParam
     // Close window immediately
     setOpenDialog(false);
 
-    if (!hasContent) {
-      if (composeParams?.type === 'draft' && draftId) {
-        (async () => {
-          try {
-            await httpClient.delete(`/emails/${draftId}`);
-            showSuccessToast('Draft deleted.');
-          } catch (error) {
-            console.error('Error deleting empty draft:', error);
-          }
-        })();
-      }
+    // Case 1: No id + no content → just close, no API call
+    if (!hasContent && !draftId) {
       setData({});
       setAttachment(null);
       if (setComposeParams) {
@@ -311,52 +302,84 @@ const ComposeMail = ({ openDialog, setOpenDialog, composeParams, setComposeParam
       return;
     }
 
-    showProgressToast('Saving draft...');
-
-    // Run saving draft process in background
-    (async () => {
-      try {
-        const messageContent: Record<string, unknown> = {};
-        if (data.subject) messageContent.subject = data.subject;
-        if (data.body) messageContent.body = data.body;
-        if (attachment) {
-          messageContent.attachment = {
-            name: attachment.name,
-            type: attachment.type,
-            content: attachment.content,
-          };
+    // Case 4: Has id + no content → delete the draft
+    if (!hasContent && draftId) {
+      showProgressToast('Deleting draft...');
+      (async () => {
+        try {
+          await httpClient.delete(`/emails/${draftId}`);
+          showSuccessToast('Draft deleted.');
+        } catch (error) {
+          console.error('Error deleting draft:', error);
+        } finally {
+          if (setComposeParams) {
+            setComposeParams(null);
+          }
         }
+      })();
+      setData({});
+      setAttachment(null);
+      return;
+    }
 
-        const payload = {
-          senderId: userEmail,
-          receiverEmail: data.to || null,
-          content: Object.keys(messageContent).length > 0 ? messageContent : null,
-          name: userName,
-          date: new Date(),
-          starred: false,
-          bin: false,
-          type: 'draft',
-        };
+    // Build payload for save/update
+    const messageContent: Record<string, unknown> = {};
+    if (data.subject) messageContent.subject = data.subject;
+    if (data.body) messageContent.body = data.body;
+    if (attachment) {
+      messageContent.attachment = {
+        name: attachment.name,
+        type: attachment.type,
+        content: attachment.content,
+      };
+    }
 
-        if (draftId) {
-          // Update the existing draft using the captured id
+    const payload = {
+      senderId: userEmail,
+      receiverEmail: data.to || null,
+      content: Object.keys(messageContent).length > 0 ? messageContent : null,
+      name: userName,
+      date: new Date(),
+      starred: false,
+      bin: false,
+      type: 'draft',
+    };
+
+    if (draftId) {
+      // Case 3: Has id + has content → PUT update existing draft
+      showProgressToast('Updating draft...');
+      (async () => {
+        try {
           await httpClient.put(`/emails/${draftId}`, payload);
           showSuccessToast('Draft updated.');
-        } else {
-          // Create a new draft
+        } catch (error: any) {
+          console.error('Error updating draft:', error);
+          const errMsg = error.response?.data?.error || error.response?.data?.message || 'Failed to update draft.';
+          showErrorToast(errMsg);
+        } finally {
+          if (setComposeParams) {
+            setComposeParams(null);
+          }
+        }
+      })();
+    } else {
+      // Case 2: No id + has content → POST save new draft
+      showProgressToast('Saving draft...');
+      (async () => {
+        try {
           await httpClient.post(saveDraftService.endpoint, payload);
           showSuccessToast('Draft saved.');
+        } catch (error: any) {
+          console.error('Error saving draft:', error);
+          const errMsg = error.response?.data?.error || error.response?.data?.message || 'Failed to save draft.';
+          showErrorToast(errMsg);
+        } finally {
+          if (setComposeParams) {
+            setComposeParams(null);
+          }
         }
-      } catch (error: any) {
-        console.error('Error saving draft in background:', error);
-        const errMsg = error.response?.data?.error || error.response?.data?.message || 'Failed to save draft.';
-        showErrorToast(errMsg);
-      } finally {
-        if (setComposeParams) {
-          setComposeParams(null);
-        }
-      }
-    })();
+      })();
+    }
   };
 
   const handleAttachFileClick = () => {

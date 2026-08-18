@@ -153,8 +153,8 @@ const EmailLayout: React.FC = () => {
     <>
       {/* ── Header ── */}
       <header className="fixed top-0 left-0 z-30 flex h-16 w-full bg-[#f6f8fc] border-b border-[#dadce0]/60">
-        {/* 8vw: Hamburger menu — aligns with icon rail below */}
-        <div className="w-[8vw] shrink-0 flex items-center justify-center">
+        {/* 6vw: Hamburger menu — aligns with icon rail below */}
+        <div className="w-[6vw] shrink-0 flex items-center justify-center">
           <IconButton
             size="small"
             onClick={toggleDrawer}
@@ -230,8 +230,8 @@ const EmailLayout: React.FC = () => {
       {/* ── Body (below header) ── */}
       <div className="flex" style={{ marginTop: 64, height: 'calc(100vh - 64px)' }}>
 
-        {/* Icon Rail — 8vw */}
-        <aside className="w-[8vw] shrink-0 flex flex-col items-center pt-3 bg-[#f6f8fc] border-r border-[#dadce0]/30 overflow-y-auto">
+        {/* Icon Rail — 6vw */}
+        <aside className="w-[6vw] shrink-0 flex flex-col items-center pt-3 bg-[#f6f8fc] border-r border-[#dadce0]/30 overflow-y-auto">
           <Box sx={iconRailItemSx(true)}>
             <MailOutlined sx={{ fontSize: 22 }} />
             <Typography sx={{ fontSize: '11px', fontWeight: 600, lineHeight: 1.2 }}>Mail</Typography>

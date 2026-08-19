@@ -4,6 +4,8 @@ const attachmentSchema = new mongoose.Schema({
     name: String,
     type: String,
     url: String,
+    path: String,
+    size: Number,
 });
 
 const messageSchema = new mongoose.Schema({

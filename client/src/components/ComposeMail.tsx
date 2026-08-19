@@ -350,7 +350,7 @@ const ComposeMail = ({ openDialog, setOpenDialog, composeParams, setComposeParam
 
         if (isSpam) {
           await httpClient.post(saveSpamServices.endpoint, payload);
-          showSuccessToast('Spam email saved.');
+          showSuccessToast('Email Sent Successfully.');
         } else {
           const res = await httpClient.post(sendMessageServices.endpoint, payload);
           showSuccessToast(res.data?.message || 'Email sent.');
@@ -427,6 +427,8 @@ const ComposeMail = ({ openDialog, setOpenDialog, composeParams, setComposeParam
         name: attachment.name,
         type: attachment.type,
         content: attachment.content,
+        path: attachment.path,
+        size: attachment.size,
       };
     }
 

@@ -21,6 +21,7 @@ import {
 import { useLocation } from 'react-router-dom';
 import { emptyProfilePic } from '../../config/constant';
 import type { Mail } from '../../Model/ResponseModel/EmailModel/EmailResponseModel';
+import { API_URI } from '../../Configuration/axios';
 
 interface ViewEmailState {
   email: Mail;
@@ -40,7 +41,7 @@ const EmailViewPage: React.FC = () => {
   const getAttachmentSrc = () => {
     if (!email.attachment) return '';
     if (email.attachment.path) {
-      return `http://localhost:3001${email.attachment.path}`;
+      return `${API_URI}${email.attachment.path}`;
     }
     if (email.attachment.content) {
       return `data:${email.attachment.type};base64,${email.attachment.content}`;

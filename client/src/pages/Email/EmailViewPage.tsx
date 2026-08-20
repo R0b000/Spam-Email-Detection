@@ -52,7 +52,10 @@ const EmailViewPage: React.FC = () => {
   const getAttachmentSrc = () => {
     if (!email.attachment) return '';
     if (email.attachment.path) {
-      return `${API_URI}${email.attachment.path}`;
+      // In dev, vite runs on a different port to the server, so we need the absolute URL.
+      // In production (Docker/Render), both are on the same origin so relative path works.
+      const base = import.meta.env.DEV ? API_URI : '';
+      return `${base}${email.attachment.path}`;
     }
     if (email.attachment.content) {
       return `data:${email.attachment.type};base64,${email.attachment.content}`;
@@ -63,9 +66,10 @@ const EmailViewPage: React.FC = () => {
   const getDownloadSrc = () => {
     if (!email.attachment) return '';
     if (email.attachment.path) {
+      const base = import.meta.env.DEV ? API_URI : '';
       const file = encodeURIComponent(email.attachment.path);
       const name = encodeURIComponent(email.attachment.name || email.attachment.path);
-      return `${API_URI}/download?file=${file}&name=${name}`;
+      return `${base}/download?file=${file}&name=${name}`;
     }
     if (email.attachment.content) {
       return `data:${email.attachment.type};base64,${email.attachment.content}`;

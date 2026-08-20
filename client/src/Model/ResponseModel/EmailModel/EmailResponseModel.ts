@@ -21,7 +21,9 @@ export interface Mail {
   starred: boolean;
   bin: boolean;
   isSpam: boolean;
-  isRead: boolean;
+  SRead: boolean;
+  RRead: boolean;
+  senderEmail?: string;
   type: string;
   name?: string;
   senderName?: string;

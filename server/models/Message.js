@@ -21,7 +21,12 @@ const messageSchema = new mongoose.Schema({
     receiverEmail: {
         type: String,
     },
-    isRead: {
+    SRead: {
+        type: Boolean,
+        required: true,
+        default: false,
+    },
+    RRead: {
         type: Boolean,
         required: true,
         default: false,

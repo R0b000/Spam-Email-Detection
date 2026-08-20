@@ -338,17 +338,24 @@ const EmailLayout: React.FC = () => {
                         key={email._id}
                         onClick={async () => {
                           // Mark as read immediately on click
-                          if (!email.isRead) {
+                          const isEmailRead = email.senderEmail === user?.email ? email.SRead : email.RRead;
+                          if (!isEmailRead) {
                             try {
-                              await httpClient.put('/read', { id: email._id, value: true });
+                              await httpClient.put('/read', { id: email._id, value: true, userEmail: user?.email });
                               if (fetchUnreadCount) fetchUnreadCount();
                             } catch (e) {
                               console.error('Error marking search result email as read:', e);
                             }
                           }
                           setShowDropdown(false);
+                          const isSender = email.senderEmail === user?.email;
+                          const updatedEmail = {
+                            ...email,
+                            SRead: isSender ? true : email.SRead,
+                            RRead: !isSender ? true : email.RRead
+                          };
                           navigate(`/emails/${email.type || 'inbox'}/view`, { 
-                            state: { email: { ...email, isRead: true }, type: email.type || 'inbox' } 
+                            state: { email: updatedEmail, type: email.type || 'inbox' } 
                           });
                         }}
                         className="px-4 py-2.5 hover:bg-gray-100 cursor-pointer border-b border-[#dadce0]/30 last:border-b-0 flex items-center justify-between gap-4 text-sm"

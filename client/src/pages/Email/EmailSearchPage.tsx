@@ -117,6 +117,10 @@ const EmailSearchPage: React.FC = () => {
   const allSelected = emails.length > 0 && selectedEmails.length === emails.length;
   const someSelected = selectedEmails.length > 0 && !allSelected;
 
+  const isEmailRead = (row: Mail) => {
+    return row.senderEmail === user?.email ? row.SRead : row.RRead;
+  };
+
   const columns = [
     {
       id: 'select_star',
@@ -245,7 +249,7 @@ const EmailSearchPage: React.FC = () => {
                 rows={emails}
                 keyExtractor={(row) => row._id}
                 getRowSx={(row) => ({
-                  backgroundColor: row.isRead ? '#ffffff' : '#eaf1fb',
+                  backgroundColor: isEmailRead(row) ? '#ffffff' : '#eaf1fb',
                 })}
                 onRowClick={async (row) => {
                   if (row.type === 'draft') {
@@ -260,15 +264,21 @@ const EmailSearchPage: React.FC = () => {
                     setOpenDialog(true);
                     return;
                   }
-                  if (!row.isRead) {
+                  if (!isEmailRead(row)) {
                     try {
-                      await httpClient.put('/read', { id: row._id, value: true });
+                      await httpClient.put('/read', { id: row._id, value: true, userEmail: user?.email });
                       if (fetchUnreadCount) fetchUnreadCount();
                     } catch (error) {
                       console.error('Error marking email as read:', error);
                     }
                   }
-                  navigate(`/emails/${row.type || 'inbox'}/view`, { state: { email: { ...row, isRead: true }, type: row.type || 'inbox' } });
+                  const isSender = row.senderEmail === user?.email;
+                  const updatedRow = {
+                    ...row,
+                    SRead: isSender ? true : row.SRead,
+                    RRead: !isSender ? true : row.RRead
+                  };
+                  navigate(`/emails/${row.type || 'inbox'}/view`, { state: { email: updatedRow, type: row.type || 'inbox' } });
                 }}
               />
             )}

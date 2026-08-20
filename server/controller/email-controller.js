@@ -168,7 +168,8 @@ const emailController = {
                                 date: new Date(),
                                 starred: false,
                                 bin: false,
-                                isRead: false,
+                                SRead: false,
+                                RRead: false,
                                 isSpam: false,
                                 type: 'sent'
                             });
@@ -433,7 +434,7 @@ const emailController = {
                         receiverEmail = receiver ? receiver.email : '';
                     }
                 } 
-                return { ...message.toObject(), receiverEmail, senderName, receiverName };
+                return { ...message.toObject(), receiverEmail, senderEmail: sender ? sender.email : '', senderName, receiverName };
             }));
     
             response.status(200).json({ message: 'Messages retrieved successfully', data: messagesWithEmails });
@@ -491,10 +492,25 @@ const emailController = {
     
     toggleReadEmail: async (request, response) => {
         try {
-            const { id, value } = request.body;
+            const { id, value, userEmail } = request.body;
+            
+            const message = await MessageModel.findById(id);
+            if (!message) {
+                return response.status(404).json({ error: 'Message not found' });
+            }
+
+            const sender = await UserModel.findById(message.sender);
+            const senderEmail = sender ? sender.email : '';
+
+            const updateFields = {};
+            if (userEmail === senderEmail) {
+                updateFields.SRead = value;
+            } else {
+                updateFields.RRead = value;
+            }
     
-            // Update the isRead status of the email
-            await MessageModel.updateOne({ _id: id }, { $set: { isRead: value }});
+            // Update the read status of the email
+            await MessageModel.updateOne({ _id: id }, { $set: updateFields });
     
             console.log('Read status updated successfully');
             response.status(201).json({ message: 'Read status updated successfully' });
@@ -565,14 +581,14 @@ const emailController = {
             let query = {};
             if (user.role === 'admin') {
                 query = {
-                    isRead: false,
+                    RRead: false,
                     bin: false,
                     type: 'sent'
                 };
             } else {
                 query = {
                     receiver: user._id,
-                    isRead: false,
+                    RRead: false,
                     bin: false,
                     type: 'sent'
                 };
@@ -665,7 +681,7 @@ const emailController = {
                 } else {
                     receiverEmail = receiver ? receiver.email : '';
                 }
-                return { ...message.toObject(), receiverEmail, senderName, receiverName };
+                return { ...message.toObject(), receiverEmail, senderEmail: sender ? sender.email : '', senderName, receiverName };
             }));
 
             response.status(200).json({ data: mappedMessages });

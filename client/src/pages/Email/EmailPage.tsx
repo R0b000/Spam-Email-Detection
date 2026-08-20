@@ -112,6 +112,10 @@ const EmailPage: React.FC = () => {
   const allSelected = emails.length > 0 && selectedEmails.length === emails.length;
   const someSelected = selectedEmails.length > 0 && !allSelected;
 
+  const isEmailRead = (row: Mail) => {
+    return row.senderEmail === user?.email ? row.SRead : row.RRead;
+  };
+
   const columns = [
     {
       id: 'select_star',
@@ -150,14 +154,14 @@ const EmailPage: React.FC = () => {
         }
         if (type === 'inbox') {
           return (
-            <span className={`${row.isRead ? 'font-normal' : 'font-semibold'} text-gtext truncate block w-full`}>
+            <span className={`${isEmailRead(row) ? 'font-normal' : 'font-semibold'} text-gtext truncate block w-full`}>
               {row.senderName || row.name || row.receiverEmail || ''}
             </span>
           );
         }
         if (type === 'sent') {
           return (
-            <span className={`${row.isRead ? 'font-normal' : 'font-semibold'} text-gtext truncate block w-full`}>
+            <span className={`${isEmailRead(row) ? 'font-normal' : 'font-semibold'} text-gtext truncate block w-full`}>
               {row.receiverEmail ? `To - ${row.receiverEmail}` : ''}
             </span>
           );
@@ -168,7 +172,7 @@ const EmailPage: React.FC = () => {
           ? (row.receiverEmail ? `To - ${row.receiverEmail}` : '')
           : (row.senderName || row.name || row.receiverEmail || '');
         return (
-          <span className={`${row.isRead ? 'font-normal' : 'font-semibold'} text-gtext truncate block w-full`}>
+          <span className={`${isEmailRead(row) ? 'font-normal' : 'font-semibold'} text-gtext truncate block w-full`}>
             {displayValue}
           </span>
         );
@@ -180,7 +184,7 @@ const EmailPage: React.FC = () => {
       gridSpan: 11,
       render: (row: Mail) => (
         <div className="truncate text-sm flex items-center gap-1.5 w-full pr-4">
-          <span className={`${row.isRead ? 'font-normal' : 'font-semibold'} text-gtext truncate`}>
+          <span className={`${isEmailRead(row) ? 'font-normal' : 'font-semibold'} text-gtext truncate`}>
             {row.subject || '(No Subject)'}
           </span>
           {row.body && (
@@ -275,7 +279,7 @@ const EmailPage: React.FC = () => {
                 rows={emails}
                 keyExtractor={(row) => row._id}
                 getRowSx={(row) => ({
-                  backgroundColor: row.isRead ? '#ffffff' : '#eaf1fb',
+                  backgroundColor: isEmailRead(row) ? '#ffffff' : '#eaf1fb',
                 })}
                 onRowClick={async (row) => {
                   if (row.type === 'draft' || type === 'draft') {
@@ -290,15 +294,21 @@ const EmailPage: React.FC = () => {
                     setOpenDialog(true);
                     return;
                   }
-                  if (!row.isRead) {
+                  if (!isEmailRead(row)) {
                     try {
-                      await httpClient.put('/read', { id: row._id, value: true });
+                      await httpClient.put('/read', { id: row._id, value: true, userEmail: user?.email });
                       if (fetchUnreadCount) fetchUnreadCount();
                     } catch (error) {
                       console.error('Error marking email as read:', error);
                     }
                   }
-                  navigate(`/emails/${type}/view`, { state: { email: { ...row, isRead: true }, type } });
+                  const isSender = row.senderEmail === user?.email;
+                  const updatedRow = {
+                    ...row,
+                    SRead: isSender ? true : row.SRead,
+                    RRead: !isSender ? true : row.RRead
+                  };
+                  navigate(`/emails/${type}/view`, { state: { email: updatedRow, type } });
                 }}
               />
             )}

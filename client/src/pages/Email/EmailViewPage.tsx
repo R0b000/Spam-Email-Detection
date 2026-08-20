@@ -16,7 +16,9 @@ import {
   ForwardOutlined,
   PrintOutlined,
   OpenInNewOutlined,
-  GetAppOutlined
+  GetAppOutlined,
+  PictureAsPdfOutlined,
+  InsertDriveFileOutlined
 } from '@mui/icons-material';
 import { useLocation } from 'react-router-dom';
 import { emptyProfilePic } from '../../config/constant';
@@ -27,6 +29,15 @@ interface ViewEmailState {
   email: Mail;
   type: string;
 }
+
+const formatFileSize = (bytes?: number) => {
+  if (bytes === undefined || bytes === null || isNaN(bytes)) return '';
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+};
 
 const EmailViewPage: React.FC = () => {
   const { state } = useLocation();
@@ -243,50 +254,121 @@ const EmailViewPage: React.FC = () => {
 
               {/* ── Attachments Box ── */}
               {email.attachment && (
-                <Box className="mt-8 border border-[#dadce0] rounded-xl p-4 max-w-lg bg-[#f8f9fa]">
-                  <Box className="flex items-center justify-between mb-3 border-b border-[#dadce0] pb-2">
-                    <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#202124' }}>
-                      Attachment: {email.attachment.name || 'Unnamed File'}
-                    </Typography>
-                    <Tooltip title="Download">
-                      <IconButton size="small" component="a" href={getDownloadSrc()} className="text-[#1a73e8] hover:bg-blue-50">
-                        <GetAppOutlined fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
+                <Box sx={{ mt: 6 }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#3c4043', mb: 1.5 }}>
+                    Attachments
+                  </Typography>
+                  <Box 
+                    sx={{ 
+                      display: 'flex', 
+                      flexWrap: 'wrap', 
+                      gap: 2 
+                    }}
+                  >
+                    <Box 
+                      sx={{ 
+                        width: '240px', 
+                        border: '1px solid #dadce0', 
+                        borderRadius: '8px', 
+                        overflow: 'hidden', 
+                        backgroundColor: '#f8f9fa',
+                        transition: 'all 0.2s ease-in-out',
+                        cursor: 'default',
+                        '&:hover': {
+                          boxShadow: '0 1px 3px rgba(60,64,67,0.3), 0 4px 8px 3px rgba(60,64,67,0.15)',
+                          '& .attachment-actions': {
+                            opacity: 1
+                          }
+                        }
+                      }}
+                    >
+                      {/* Upper half: Thumbnail/Preview */}
+                      <Box 
+                        sx={{ 
+                          height: '120px', 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          justifyContent: 'center', 
+                          backgroundColor: '#e8eaed',
+                          position: 'relative',
+                          borderBottom: '1px solid #dadce0',
+                          overflow: 'hidden'
+                        }}
+                      >
+                        {isImageAttachment() ? (
+                          <img
+                            src={getAttachmentSrc()}
+                            alt={email.attachment.name || 'attachment'}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          />
+                        ) : isPdfAttachment() ? (
+                          <PictureAsPdfOutlined sx={{ fontSize: 48, color: '#ea4335' }} />
+                        ) : (
+                          <InsertDriveFileOutlined sx={{ fontSize: 48, color: '#1a73e8' }} />
+                        )}
+                        
+                        {/* Hover Overlay with Actions */}
+                        <Box 
+                          className="attachment-actions"
+                          sx={{ 
+                            position: 'absolute', 
+                            top: 0, 
+                            left: 0, 
+                            right: 0, 
+                            bottom: 0, 
+                            backgroundColor: 'rgba(0,0,0,0.4)', 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'center', 
+                            gap: 1.5,
+                            opacity: 0,
+                            transition: 'opacity 0.2s'
+                          }}
+                        >
+                          <Tooltip title="View in new tab">
+                            <IconButton 
+                              size="small" 
+                              component="a" 
+                              href={getAttachmentSrc()} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              sx={{ 
+                                color: 'white', 
+                                backgroundColor: 'rgba(255,255,255,0.2)', 
+                                '&:hover': { backgroundColor: 'rgba(255,255,255,0.3)' } 
+                              }}
+                            >
+                              <OpenInNewOutlined fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Download">
+                            <IconButton 
+                              size="small" 
+                              component="a" 
+                              href={getDownloadSrc()}
+                              sx={{ 
+                                color: 'white', 
+                                backgroundColor: 'rgba(255,255,255,0.2)', 
+                                '&:hover': { backgroundColor: 'rgba(255,255,255,0.3)' } 
+                              }}
+                            >
+                              <GetAppOutlined fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        </Box>
+                      </Box>
+
+                      {/* Lower half: Details */}
+                      <Box sx={{ p: 1.5, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                        <Typography variant="body2" noWrap sx={{ fontWeight: 500, color: '#3c4043' }}>
+                          {email.attachment.name || 'Unnamed File'}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: '#5f6368', mt: 0.5 }}>
+                          {email.attachment.size ? formatFileSize(email.attachment.size) : (email.attachment.type || 'Unknown Type')}
+                        </Typography>
+                      </Box>
+                    </Box>
                   </Box>
-                  
-                  {isImageAttachment() ? (
-                    <Box className="rounded-lg overflow-hidden border border-[#dadce0] bg-white flex justify-center p-2 max-h-[300px]">
-                      <img
-                        src={getAttachmentSrc()}
-                        alt={email.attachment.name || 'attachment'}
-                        className="max-w-full rounded max-h-[280px] object-contain"
-                      />
-                    </Box>
-                  ) : isPdfAttachment() ? (
-                    <Box className="rounded-lg overflow-hidden border border-[#dadce0] bg-white p-1">
-                      <iframe
-                        src={getAttachmentSrc()}
-                        title={email.attachment.name || 'PDF attachment'}
-                        className="w-full rounded"
-                        style={{ height: 480, border: 'none' }}
-                      />
-                    </Box>
-                  ) : (
-                    <Box className="flex items-center gap-3 p-3 bg-white border border-[#dadce0] rounded-lg">
-                      <Box className="bg-[#f1f3f4] p-2 rounded text-[#5f6368] font-bold text-xs uppercase">
-                        {email.attachment.type?.split('/')[1] || 'FILE'}
-                      </Box>
-                      <Box className="flex-1 min-w-0">
-                        <Typography variant="body2" noWrap sx={{ fontWeight: 500, color: '#202124' }}>
-                          {email.attachment.name}
-                        </Typography>
-                        <Typography variant="caption" sx={{ color: '#5f6368' }}>
-                          {email.attachment.type}
-                        </Typography>
-                      </Box>
-                    </Box>
-                  )}
                 </Box>
               )}
 

@@ -28,7 +28,7 @@ Connection();
 const distPath = path.join(__dirname, '../client/dist');
 app.use(express.static(distPath));
 
-app.use('/', routes);
+app.use('/api', routes);
 
 // Fallback to React index.html for SPA routing
 app.get('*', (req, res) => {

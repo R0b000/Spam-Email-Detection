@@ -24,6 +24,7 @@ import { useLocation } from 'react-router-dom';
 import { emptyProfilePic } from '../../config/constant';
 import type { Mail } from '../../Model/ResponseModel/EmailModel/EmailResponseModel';
 import { API_URI } from '../../Configuration/axios';
+import { useAuth } from '../../context/AuthContext';
 
 interface ViewEmailState {
   email: Mail;
@@ -39,10 +40,14 @@ const formatFileSize = (bytes?: number) => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
 };
 
+// Sent-side types: user is the sender
+const SENT_TYPES = ['sent', 'draft'];
+
 const EmailViewPage: React.FC = () => {
   const { state } = useLocation();
   const { email, type } = state as ViewEmailState;
   const [isStarred, setIsStarred] = React.useState(email.starred || false);
+  const { user } = useAuth();
 
   const handleStarClick = () => {
     setIsStarred((prev) => !prev);
@@ -69,7 +74,7 @@ const EmailViewPage: React.FC = () => {
       const base = import.meta.env.DEV ? API_URI : '';
       const file = encodeURIComponent(email.attachment.path);
       const name = encodeURIComponent(email.attachment.name || email.attachment.path);
-      return `${base}/download?file=${file}&name=${name}`;
+      return `${base}/api/download?file=${file}&name=${name}`;
     }
     if (email.attachment.content) {
       return `data:${email.attachment.type};base64,${email.attachment.content}`;
@@ -203,17 +208,33 @@ const EmailViewPage: React.FC = () => {
             <Box className="flex-1 min-w-0">
               <Box className="flex justify-between items-start">
                 <Box>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#202124', display: 'inline-block' }}>
-                    {email.senderName || email.name || 'Unknown Sender'}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: '#5f6368', display: 'inline-block', ml: 1 }}>
-                    &lt;{email.sender || email.receiverEmail || ''}&gt;
-                  </Typography>
-                  
-                  {/* "to me" info */}
-                  <Typography variant="body2" sx={{ color: '#5f6368', fontSize: '12px', mt: 0.5 }}>
-                    to {email.receiverEmail || 'me'}
-                  </Typography>
+                  {SENT_TYPES.includes(email.type) ? (
+                    /* ── SENT / DRAFT view: I am the sender ── */
+                    <>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#202124', display: 'inline-block' }}>
+                        {user?.name || 'Me'}
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: '#5f6368', display: 'inline-block', ml: 1 }}>
+                        &lt;{user?.email || email.senderEmail || ''}&gt;
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: '#5f6368', fontSize: '12px', mt: 0.5 }}>
+                        to {email.receiverEmail || email.receiver || ''}
+                      </Typography>
+                    </>
+                  ) : (
+                    /* ── INBOX / STARRED / BIN / SPAM / ALL MAIL: I am the receiver ── */
+                    <>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#202124', display: 'inline-block' }}>
+                        {email.senderName || email.name || 'Unknown Sender'}
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: '#5f6368', display: 'inline-block', ml: 1 }}>
+                        &lt;{email.senderEmail || email.sender || ''}&gt;
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: '#5f6368', fontSize: '12px', mt: 0.5 }}>
+                        to me
+                      </Typography>
+                    </>
+                  )}
                 </Box>
 
                 {/* Date and actions */}

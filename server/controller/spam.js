@@ -17,11 +17,12 @@ function runPythonScript(emailSubject, emailBody) {
         const args = [emailSubject, emailBody];
 
         try{
-            console.log('[Python] Spawning: python', pythonScriptPath);
+            const pythonCommand = process.platform === 'win32' ? 'python' : 'python3';
+            console.log(`[Python] Spawning: ${pythonCommand}`, pythonScriptPath);
             const startTime = Date.now();
 
             // Spawn a child process to execute the Python script with UTF-8 encoding for standard streams
-            const pythonProcess = spawn('python', [pythonScriptPath, ...args], {
+            const pythonProcess = spawn(pythonCommand, [pythonScriptPath, ...args], {
                 env: { ...process.env, PYTHONIOENCODING: 'utf-8' }
             });
 

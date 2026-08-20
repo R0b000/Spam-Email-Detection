@@ -60,6 +60,24 @@ routes.post('/upload', upload.single('file'), (req, res) => {
     }
 });
 
+routes.get('/download', (req, res) => {
+    try {
+        const { file, name } = req.query;
+        if (!file) {
+            return res.status(400).json({ error: 'file is required' });
+        }
+        const filename = path.basename(file);
+        const absolutePath = path.join(__dirname, '../uploads', filename);
+        if (!fs.existsSync(absolutePath)) {
+            return res.status(404).json({ error: 'File not found' });
+        }
+        const downloadName = (name && path.basename(name)) || filename;
+        res.download(absolutePath, downloadName);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 routes.delete('/delete-file', (req, res) => {
     try {
         const { filePath } = req.body;

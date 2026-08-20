@@ -49,9 +49,29 @@ const EmailViewPage: React.FC = () => {
     return email.attachment.src || '';
   };
 
+  const getDownloadSrc = () => {
+    if (!email.attachment) return '';
+    if (email.attachment.path) {
+      const file = encodeURIComponent(email.attachment.path);
+      const name = encodeURIComponent(email.attachment.name || email.attachment.path);
+      return `${API_URI}/download?file=${file}&name=${name}`;
+    }
+    if (email.attachment.content) {
+      return `data:${email.attachment.type};base64,${email.attachment.content}`;
+    }
+    return email.attachment.src || '';
+  };
+
   const isImageAttachment = () => {
     if (!email.attachment || !email.attachment.type) return false;
     return email.attachment.type.startsWith('image/');
+  };
+
+  const isPdfAttachment = () => {
+    if (!email.attachment) return false;
+    const type = (email.attachment.type || '').toLowerCase();
+    const name = (email.attachment.name || '').toLowerCase();
+    return type === 'application/pdf' || type === 'application/x-pdf' || type.endsWith('pdf') || name.endsWith('.pdf');
   };
 
   return (
@@ -229,7 +249,7 @@ const EmailViewPage: React.FC = () => {
                       Attachment: {email.attachment.name || 'Unnamed File'}
                     </Typography>
                     <Tooltip title="Download">
-                      <IconButton size="small" component="a" href={getAttachmentSrc()} download={email.attachment.name || 'attachment'} className="text-[#1a73e8] hover:bg-blue-50">
+                      <IconButton size="small" component="a" href={getDownloadSrc()} className="text-[#1a73e8] hover:bg-blue-50">
                         <GetAppOutlined fontSize="small" />
                       </IconButton>
                     </Tooltip>
@@ -241,6 +261,15 @@ const EmailViewPage: React.FC = () => {
                         src={getAttachmentSrc()}
                         alt={email.attachment.name || 'attachment'}
                         className="max-w-full rounded max-h-[280px] object-contain"
+                      />
+                    </Box>
+                  ) : isPdfAttachment() ? (
+                    <Box className="rounded-lg overflow-hidden border border-[#dadce0] bg-white p-1">
+                      <iframe
+                        src={getAttachmentSrc()}
+                        title={email.attachment.name || 'PDF attachment'}
+                        className="w-full rounded"
+                        style={{ height: 480, border: 'none' }}
                       />
                     </Box>
                   ) : (

@@ -305,7 +305,7 @@ const ComposeMail = ({ openDialog, setOpenDialog, composeParams, setComposeParam
         }
 
         // 3. Otherwise, run spam detection for valid recipients
-        const spamDetectionResponse = await httpClient.post('/detect', {
+        const spamDetectionResponse = await httpClient.post('/process-message', {
           emailSubject: data.subject,
           emailBody: data.body,
         });

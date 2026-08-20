@@ -37,6 +37,7 @@ import type { Mail } from '../../Model/ResponseModel/EmailModel/EmailResponseMod
 import Loader from '../../components/Loader/Loader';
 import ComposeMail from '../../components/ComposeMail';
 import httpClient from '../../Configuration/axios';
+import Logo from '../../img/Email.svg';
 
 export interface EmailOutletContext {
   openDrawer: boolean;
@@ -234,7 +235,7 @@ const EmailLayout: React.FC = () => {
         <div className="flex-1 flex items-center py-2 px-4 gap-4">
           {/* Logo — spans ~15vw to align with nav sidebar */}
           <div className="w-[15vw] shrink-0 flex items-center gap-2">
-            <img src='/src/img/Email.svg' alt='Email Logo' className="h-7 w-7" />
+            <img src={Logo} alt='Email Logo' className="h-7 w-7" />
             <span className="text-[22px] text-gsubtext font-normal tracking-tight">Email</span>
           </div>
 

@@ -31,7 +31,7 @@ const logError = (error: any) => {
 
 /** Singleton Axios instance pre-configured with the backend base URL. */
 const httpClient = axios.create({
-  baseURL: API_URI,
+  baseURL: `${API_URI}/api`,
 });
 
 httpClient.interceptors.request.use(logRequest, logError);

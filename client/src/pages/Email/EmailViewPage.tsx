@@ -74,7 +74,7 @@ const EmailViewPage: React.FC = () => {
       const base = import.meta.env.DEV ? API_URI : '';
       const file = encodeURIComponent(email.attachment.path);
       const name = encodeURIComponent(email.attachment.name || email.attachment.path);
-      return `${base}/download?file=${file}&name=${name}`;
+      return `${base}/api/download?file=${file}&name=${name}`;
     }
     if (email.attachment.content) {
       return `data:${email.attachment.type};base64,${email.attachment.content}`;

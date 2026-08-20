@@ -1,6 +1,10 @@
 import axios from 'axios';
 
-export const API_URI = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3001');
+export const API_URI = import.meta.env.VITE_API_URL || (
+  typeof window !== 'undefined' && window.location.hostname !== 'localhost'
+    ? window.location.origin
+    : 'http://localhost:3001'
+);
 
 const isDev = import.meta.env.DEV;
 

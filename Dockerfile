@@ -1,11 +1,11 @@
 # ==========================================
 # Stage 1: Build the React client
 # ==========================================
-FROM node:18-slim AS client-builder
+FROM node:22-slim AS client-builder
 WORKDIR /app/client
 
-# Copy dependency configuration files
-COPY client/package*.json ./
+# Copy dependency configuration file (only package.json to avoid Windows lockfile platform limits)
+COPY client/package.json ./
 # Install dependencies
 RUN npm install
 
@@ -16,7 +16,7 @@ RUN npm run build
 # ==========================================
 # Stage 2: Backend server setup with Python ML service
 # ==========================================
-FROM node:18-slim
+FROM node:22-slim
 WORKDIR /app
 
 # Install Python and pip
@@ -28,8 +28,8 @@ RUN apt-get update && apt-get install -y \
 # Install python dependencies required to run the joblib models
 RUN pip3 install --no-cache-dir --break-system-packages joblib scikit-learn
 
-# Copy backend dependencies and install
-COPY server/package*.json ./server/
+# Copy backend dependency configuration file
+COPY server/package.json ./server/
 WORKDIR /app/server
 RUN npm install --only=production
 

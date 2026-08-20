@@ -1,7 +1,7 @@
 # ==========================================
 # Stage 1: Build the React client
 # ==========================================
-FROM node:18-alpine AS client-builder
+FROM node:18-slim AS client-builder
 WORKDIR /app/client
 
 # Copy dependency configuration files

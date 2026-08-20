@@ -20,8 +20,10 @@ function runPythonScript(emailSubject, emailBody) {
             console.log('[Python] Spawning: python', pythonScriptPath);
             const startTime = Date.now();
 
-            // Spawn a child process to execute the Python script
-            const pythonProcess = spawn('python', [pythonScriptPath, ...args]);
+            // Spawn a child process to execute the Python script with UTF-8 encoding for standard streams
+            const pythonProcess = spawn('python', [pythonScriptPath, ...args], {
+                env: { ...process.env, PYTHONIOENCODING: 'utf-8' }
+            });
 
             console.log('[Python] Process spawned, PID:', pythonProcess.pid);
 

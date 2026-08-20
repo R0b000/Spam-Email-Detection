@@ -195,17 +195,31 @@ const emailController = {
             const emailSubject = req.body.emailSubject;
             const emailBody = req.body.emailBody;
 
-            console.log('[detectspam] Email Subject:', emailSubject);
-            console.log('[detectspam] Email Body:', emailBody ? emailBody.substring(0, 100) + '...' : '(empty)');
+            // Helper function to remove emojis from a string to prevent issues in python detection model and command line arguments
+            const removeEmojis = (text) => {
+                if (typeof text !== 'string') return '';
+                return text
+                    .replace(/\p{Emoji_Presentation}/gu, '')
+                    .replace(/\p{Extended_Pictographic}/gu, '')
+                    .replace(/[\u{1F1E6}-\u{1F1FF}\u{200D}\u{FE0F}]/gu, '');
+            };
 
-            if (!emailSubject && !emailBody) {
-                console.warn('[detectspam] WARNING: Both subject and body are empty!');
+            const cleanSubject = removeEmojis(emailSubject);
+            const cleanBody = removeEmojis(emailBody);
+
+            console.log('[detectspam] Email Subject (original):', emailSubject);
+            console.log('[detectspam] Email Subject (cleaned):', cleanSubject);
+            console.log('[detectspam] Email Body (original):', emailBody ? emailBody.substring(0, 100) + '...' : '(empty)');
+            console.log('[detectspam] Email Body (cleaned):', cleanBody ? cleanBody.substring(0, 100) + '...' : '(empty)');
+
+            if (!cleanSubject && !cleanBody) {
+                console.warn('[detectspam] WARNING: Both subject and body are empty after removing emojis!');
             }
 
             console.log('[detectspam] Calling Python script...');
             const startTime = Date.now();
 
-            runPythonScript(emailSubject, emailBody)
+            runPythonScript(cleanSubject, cleanBody)
                 .then((output) => {
                     const elapsed = Date.now() - startTime;
                     console.log(`[detectspam] Python script completed in ${elapsed}ms`);

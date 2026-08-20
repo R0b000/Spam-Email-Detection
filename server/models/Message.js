@@ -4,6 +4,8 @@ const attachmentSchema = new mongoose.Schema({
     name: String,
     type: String,
     url: String,
+    path: String,
+    size: Number,
 });
 
 const messageSchema = new mongoose.Schema({
@@ -19,7 +21,12 @@ const messageSchema = new mongoose.Schema({
     receiverEmail: {
         type: String,
     },
-    isRead: {
+    SRead: {
+        type: Boolean,
+        required: true,
+        default: false,
+    },
+    RRead: {
         type: Boolean,
         required: true,
         default: false,

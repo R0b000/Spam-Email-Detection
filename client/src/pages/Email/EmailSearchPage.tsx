@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useOutletContext, useNavigate } from 'react-router-dom';
+import { useOutletContext, useNavigate, useSearchParams } from 'react-router-dom';
 import { Box, Checkbox, IconButton, Typography } from '@mui/material';
 import { DeleteOutline, RefreshOutlined, MoreVertOutlined, Star, StarBorder } from '@mui/icons-material';
 import Table from '../../components/Table/Table';
@@ -21,12 +21,13 @@ interface OutletContext extends EmailOutletContext {
   fetchUnreadCount?: () => Promise<void>;
 }
 
-const EmailPage: React.FC = () => {
+const EmailSearchPage: React.FC = () => {
   const [emails, setEmails] = useState<Mail[]>([]);
   const [refresh, setRefresh] = useState(false);
   const [starredSet, setStarredSet] = useState<Set<string>>(new Set());
+  const [searchParams] = useSearchParams();
+  const query = searchParams.get('q') || '';
 
-  const { type = '' } = useParams();
   const { selectedEmails, setSelectedEmails, setOpenDialog, setComposeParams, fetchUnreadCount } = useOutletContext<OutletContext>();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -39,15 +40,19 @@ const EmailPage: React.FC = () => {
         return;
       }
 
-      const response = await httpClient.get(`/emails/${type}?userEmail=${userEmail}`);
-      const payload = response.data as { message?: string; data: Mail[] };
+      if (!query.trim()) {
+        setEmails([]);
+        return;
+      }
+
+      const response = await httpClient.get(`/search-emails?userEmail=${userEmail}&query=${query}`);
+      const payload = response.data as { data: Mail[] };
       setEmails(payload.data ?? []);
     } catch (error) {
-      console.error('Error fetching emails:', error);
+      console.error('Error searching emails:', error);
     }
   };
 
-  // Fetch on mount, on route change, and on manual refresh
   useEffect(() => {
     fetchEmails();
 
@@ -60,11 +65,11 @@ const EmailPage: React.FC = () => {
       clearInterval(intervalId);
       setSelectedEmails([]);
     };
-  }, [type, refresh, user?.email, setSelectedEmails]);
+  }, [query, refresh, user?.email, setSelectedEmails]);
 
   useEffect(() => {
     setSelectedEmails([]);
-  }, [type, setSelectedEmails]);
+  }, [query, setSelectedEmails]);
 
   const toggleStar = async (email: Mail) => {
     try {
@@ -143,57 +148,22 @@ const EmailPage: React.FC = () => {
     {
       id: 'sender',
       label: 'Sender',
-      gridSpan: 4,
-      render: (row: Mail) => {
-        if (type === 'draft' || row.type === 'draft') {
-          return (
-            <span className="text-[#d93025] font-semibold">
-              Draft
-            </span>
-          );
-        }
-        if (type === 'inbox') {
-          return (
-            <span className={`${isEmailRead(row) ? 'font-normal' : 'font-semibold'} text-gtext truncate block w-full`}>
-              {row.senderName || row.name || row.receiverEmail || ''}
-            </span>
-          );
-        }
-        if (type === 'sent') {
-          return (
-            <span className={`${isEmailRead(row) ? 'font-normal' : 'font-semibold'} text-gtext truncate block w-full`}>
-              {row.receiverEmail ? `To - ${row.receiverEmail}` : ''}
-            </span>
-          );
-        }
-        // Fallback for other tabs (starred, bin, allmail, spam)
-        const isOutbound = row.type === 'sent' || row.sender === user?.email;
-        const displayValue = isOutbound
-          ? (row.receiverEmail ? `To - ${row.receiverEmail}` : '')
-          : (row.senderName || row.name || row.receiverEmail || '');
-        return (
-          <span className={`${isEmailRead(row) ? 'font-normal' : 'font-semibold'} text-gtext truncate block w-full`}>
-            {displayValue}
-          </span>
-        );
-      },
+      gridSpan: 3,
+      render: (row: Mail) => (
+        <span className="text-sm font-semibold text-gtext truncate block max-w-full">
+          {row.senderName || row.name || 'Unknown'}
+        </span>
+      ),
     },
     {
-      id: 'subject',
-      label: 'Subject',
-      gridSpan: 11,
+      id: 'content',
+      label: 'Subject & Body',
+      gridSpan: 6,
       render: (row: Mail) => (
-        <div className="truncate text-sm flex items-center gap-1.5 w-full pr-4">
-          <span className={`${isEmailRead(row) ? 'font-normal' : 'font-semibold'} text-gtext truncate`}>
-            {row.subject || '(No Subject)'}
-          </span>
-          {row.body && (
-            <span className="text-gsubtext font-normal truncate">
-              {' — '}
-              {row.body}
-            </span>
-          )}
-        </div>
+        <span className="text-sm text-gtext truncate block max-w-full">
+          <strong className="font-semibold">{row.subject || '(No Subject)'}</strong>
+          {row.body && <span className="text-gsubtext font-normal"> — {row.body}</span>}
+        </span>
       ),
     },
     {
@@ -271,7 +241,7 @@ const EmailPage: React.FC = () => {
                   backgroundColor: '#ffffff',
                 }}
               >
-                Your {type} is empty.
+                No search results found matching "{query}".
               </Box>
             ) : (
               <Table
@@ -282,7 +252,7 @@ const EmailPage: React.FC = () => {
                   backgroundColor: isEmailRead(row) ? '#ffffff' : '#eaf1fb',
                 })}
                 onRowClick={async (row) => {
-                  if (row.type === 'draft' || type === 'draft') {
+                  if (row.type === 'draft') {
                     setComposeParams({
                       id: row._id,
                       recipients: row.receiverEmail || '',
@@ -308,7 +278,7 @@ const EmailPage: React.FC = () => {
                     SRead: isSender ? true : row.SRead,
                     RRead: !isSender ? true : row.RRead
                   };
-                  navigate(`/emails/${type}/view`, { state: { email: updatedRow, type } });
+                  navigate(`/emails/${row.type || 'inbox'}/view`, { state: { email: updatedRow, type: row.type || 'inbox' } });
                 }}
               />
             )}
@@ -319,4 +289,4 @@ const EmailPage: React.FC = () => {
   );
 };
 
-export default EmailPage;
+export default EmailSearchPage;

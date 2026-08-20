@@ -9,6 +9,7 @@ import Home from '../../pages/Home/Home';
 
 const EmailListPage = lazy(() => import('../../pages/Email/EmailPage'));
 const EmailView = lazy(() => import('../../pages/Email/EmailViewPage'));
+const EmailSearch = lazy(() => import('../../pages/Email/EmailSearchPage'));
 
 const EmailRoute: RouteObject[] = [
   {
@@ -28,8 +29,9 @@ const EmailRoute: RouteObject[] = [
     ),
     children: [
       { index: true, element: <Navigate to="inbox" replace /> },
+      { path: 'search', element: <EmailSearch /> },
       { path: ':type', element: <EmailListPage /> },
-      { path: 'view', element: <EmailView /> },
+      { path: ':type/view', element: <EmailView /> },
     ],
   },
 ];

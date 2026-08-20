@@ -4,6 +4,8 @@ export interface Attachment {
   content?: string;
   src?: string;
   alt?: string;
+  path?: string;
+  size?: number;
 }
 
 export interface Mail {
@@ -19,7 +21,9 @@ export interface Mail {
   starred: boolean;
   bin: boolean;
   isSpam: boolean;
-  isRead: boolean;
+  SRead: boolean;
+  RRead: boolean;
+  senderEmail?: string;
   type: string;
   name?: string;
   senderName?: string;

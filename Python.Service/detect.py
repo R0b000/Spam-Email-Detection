@@ -2,6 +2,12 @@ import sys
 import os
 import joblib
 
+# Ensure standard output and error use UTF-8 encoding
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
+if hasattr(sys.stderr, 'reconfigure'):
+    sys.stderr.reconfigure(encoding='utf-8')
+
 # Folder where this script + models live (cwd-independent)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 

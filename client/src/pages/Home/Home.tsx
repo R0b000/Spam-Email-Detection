@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import Logo from '../../img/Email.svg';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -18,7 +19,7 @@ const Home: React.FC = () => {
 
   return (
     <div className="relative z-10 flex min-h-screen flex-col items-center justify-center bg-white px-6 text-center">
-      <img src="/email.svg" alt="Email logo" className="mx-auto mb-8 block h-24 w-24 object-contain" />
+      <img src={Logo} alt="Email logo" className="mx-auto mb-8 block h-24 w-24 object-contain" />
       <h1 className="mb-3 text-4xl font-normal text-gtext">Welcome to Email</h1>
       <p className="mx-auto mb-10 max-w-xl text-base text-gsubtext">
         A fast, secure, and intelligent email experience. Manage your inbox, stay organized, and connect with confidence.

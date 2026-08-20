@@ -1,6 +1,7 @@
 import React, { Suspense } from 'react';
 import { Outlet } from 'react-router-dom';
 import Loader from '../../components/Loader/Loader';
+import Logo from '../../img/Email.svg';
 
 const AuthLayout: React.FC = () => {
   return (
@@ -12,7 +13,7 @@ const AuthLayout: React.FC = () => {
           position: absolute;
           width: 220px;
           height: 220px;
-          background-image: url("/email.svg");
+          background-image: url("${Logo}");
           background-repeat: no-repeat;
           background-size: contain;
           opacity: 0.12;

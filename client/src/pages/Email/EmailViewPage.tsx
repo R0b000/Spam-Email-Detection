@@ -192,7 +192,7 @@ const EmailViewPage: React.FC = () => {
         <Box className="flex-1 overflow-y-auto" sx={{ px: { xs: 2, sm: 8 }, py: { xs: 3, sm: 6 } }}>
           
           {/* Email Subject Row */}
-          <Box mb={6} sx={{ pl: { xs: 0, sm: 8, md: 14 } }}>
+          <Box mb={6} sx={{ pl: { xs: 0, sm: 8, md: 7 } }}>
             <Typography variant="h5" sx={{ fontWeight: 500, color: '#202124', fontSize: { xs: '18px', sm: '22px' } }} className="flex items-center gap-2.5 flex-wrap">
               {email.subject || '(No Subject)'}
               <span className="text-[10px] font-bold text-[#1a73e8] bg-[#d3e3fd] px-2 py-0.5 rounded uppercase tracking-wider">

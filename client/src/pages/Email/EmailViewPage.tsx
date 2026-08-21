@@ -97,19 +97,22 @@ const EmailViewPage: React.FC = () => {
   return (
     <Box
       className="transition-all flex flex-col"
-      style={{
+      sx={{
         width: '100%',
-        padding: '12px 24px 24px 12px',
+        padding: { xs: '8px', sm: '12px 24px 24px 12px' },
         boxSizing: 'border-box',
         height: '100%',
         minHeight: 0,
       }}
     >
-      <Box className="bg-white rounded-2xl border border-[#dadce0]/60 shadow-sm overflow-hidden flex flex-col h-full">
+      <Box 
+        className="bg-white border border-[#dadce0]/60 shadow-sm overflow-hidden flex flex-col h-full"
+        sx={{ borderRadius: { xs: '8px', sm: '16px' } }}
+      >
         
         {/* ── Toolbar Action Bar (Gmail Style) ── */}
-        <Box className="flex items-center justify-between border-b border-[#dadce0]/50 bg-white px-5 py-2">
-          <Box className="flex items-center gap-1.5">
+        <Box className="flex items-center justify-between border-b border-[#dadce0]/50 bg-white px-3 sm:px-5 py-2 overflow-x-auto" sx={{ '&::-webkit-scrollbar': { display: 'none' }, msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
+          <Box className="flex items-center gap-1.5 shrink-0">
             <Tooltip title="Back to list">
               <IconButton size="small" onClick={() => window.history.back()} className="text-[#5f6368] hover:bg-gray-100/80">
                 <ArrowBack fontSize="small" />
@@ -117,61 +120,61 @@ const EmailViewPage: React.FC = () => {
             </Tooltip>
             
             <Divider orientation="vertical" flexItem sx={{ mx: 1, my: 0.5 }} />
-
+ 
             <Tooltip title="Archive">
               <IconButton size="small" className="text-[#5f6368] hover:bg-gray-100/80">
                 <ArchiveOutlined fontSize="small" />
               </IconButton>
             </Tooltip>
-
+ 
             <Tooltip title="Report spam">
               <IconButton size="small" className="text-[#5f6368] hover:bg-gray-100/80">
                 <ReportOutlined fontSize="small" />
               </IconButton>
             </Tooltip>
-
+ 
             <Tooltip title="Delete">
               <IconButton size="small" className="text-[#5f6368] hover:bg-gray-100/80">
                 <DeleteOutline fontSize="small" />
               </IconButton>
             </Tooltip>
-
+ 
             <Divider orientation="vertical" flexItem sx={{ mx: 1, my: 0.5 }} />
-
+ 
             <Tooltip title="Mark as unread">
               <IconButton size="small" className="text-[#5f6368] hover:bg-gray-100/80">
                 <MailOutlined fontSize="small" />
               </IconButton>
             </Tooltip>
-
+ 
             <Tooltip title="Snooze">
               <IconButton size="small" className="text-[#5f6368] hover:bg-gray-100/80">
                 <AccessTimeOutlined fontSize="small" />
               </IconButton>
             </Tooltip>
-
+ 
             <Divider orientation="vertical" flexItem sx={{ mx: 1, my: 0.5 }} />
-
+ 
             <Tooltip title="Move to">
               <IconButton size="small" className="text-[#5f6368] hover:bg-gray-100/80">
                 <FolderOutlined fontSize="small" />
               </IconButton>
             </Tooltip>
-
+ 
             <Tooltip title="Labels">
               <IconButton size="small" className="text-[#5f6368] hover:bg-gray-100/80">
                 <LabelOutlined fontSize="small" />
               </IconButton>
             </Tooltip>
-
+ 
             <Tooltip title="More">
               <IconButton size="small" className="text-[#5f6368] hover:bg-gray-100/80">
                 <MoreVertOutlined fontSize="small" />
               </IconButton>
             </Tooltip>
           </Box>
-
-          <Box className="flex items-center gap-1">
+ 
+          <Box className="flex items-center gap-1 shrink-0 ml-4">
             <Tooltip title="Print email">
               <IconButton size="small" className="text-[#5f6368] hover:bg-gray-100/80">
                 <PrintOutlined fontSize="small" />
@@ -186,60 +189,44 @@ const EmailViewPage: React.FC = () => {
         </Box>
 
         {/* ── Scrollable Email View ── */}
-        <Box className="flex-1 overflow-y-auto px-8 py-6">
+        <Box className="flex-1 overflow-y-auto" sx={{ px: { xs: 2, sm: 8 }, py: { xs: 3, sm: 6 } }}>
           
           {/* Email Subject Row */}
-          <Box className="flex justify-between items-center mb-6 pl-14">
-            <Typography variant="h5" sx={{ fontWeight: 500, color: '#202124', fontSize: '22px' }} className="flex items-center gap-2.5">
+          <Box mb={6} sx={{ pl: { xs: 0, sm: 8, md: 7 } }}>
+            <Typography variant="h5" sx={{ fontWeight: 500, color: '#202124', fontSize: { xs: '18px', sm: '22px' } }} className="flex items-center gap-2.5 flex-wrap">
               {email.subject || '(No Subject)'}
               <span className="text-[10px] font-bold text-[#1a73e8] bg-[#d3e3fd] px-2 py-0.5 rounded uppercase tracking-wider">
                 {type}
               </span>
             </Typography>
           </Box>
-
+ 
           {/* Sender & Recipient Details Row */}
-          <Box className="flex gap-4 mb-8">
+          <Box className="flex gap-3 sm:gap-4 mb-8">
             <Avatar
               src={emptyProfilePic}
               alt="profile"
               sx={{ width: 40, height: 40, bgcolor: '#ccc' }}
             />
             <Box className="flex-1 min-w-0">
-              <Box className="flex justify-between items-start">
-                <Box>
-                  {SENT_TYPES.includes(email.type) ? (
-                    /* ── SENT / DRAFT view: I am the sender ── */
-                    <>
-                      <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#202124', display: 'inline-block' }}>
-                        {user?.name || 'Me'}
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: '#5f6368', display: 'inline-block', ml: 1 }}>
-                        &lt;{user?.email || email.senderEmail || ''}&gt;
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: '#5f6368', fontSize: '12px', mt: 0.5 }}>
-                        to {email.receiverEmail || email.receiver || ''}
-                      </Typography>
-                    </>
-                  ) : (
-                    /* ── INBOX / STARRED / BIN / SPAM / ALL MAIL: I am the receiver ── */
-                    <>
-                      <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#202124', display: 'inline-block' }}>
-                        {email.senderName || email.name || 'Unknown Sender'}
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: '#5f6368', display: 'inline-block', ml: 1 }}>
-                        &lt;{email.senderEmail || email.sender || ''}&gt;
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: '#5f6368', fontSize: '12px', mt: 0.5 }}>
-                        to me
-                      </Typography>
-                    </>
-                  )}
+              <Box className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <Box className="min-w-0 flex-1">
+                  <div className="flex items-baseline flex-wrap gap-x-1.5">
+                    <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#202124' }}>
+                      {email.senderDisplay || 'Unknown Sender'}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#5f6368', fontSize: '12px' }} className="truncate">
+                      &lt;{email.senderEmailDisplay || ''}&gt;
+                    </Typography>
+                  </div>
+                  <Typography variant="body2" sx={{ color: '#5f6368', fontSize: '12px', mt: 0.5 }}>
+                    to {email.receiverDisplay || ''}
+                  </Typography>
                 </Box>
-
+ 
                 {/* Date and actions */}
-                <Box className="flex items-center gap-2">
-                  <Typography variant="body2" sx={{ color: '#5f6368', fontSize: '12px' }}>
+                <Box className="flex items-center gap-2 self-end sm:self-center shrink-0">
+                  <Typography variant="body2" sx={{ color: '#5f6368', fontSize: '11px' }}>
                     {email.date && (
                       <>
                         {new Date(email.date).getDate()}&nbsp;
@@ -249,7 +236,7 @@ const EmailViewPage: React.FC = () => {
                       </>
                     )}
                   </Typography>
-
+ 
                   <Tooltip title={isStarred ? 'Unstar' : 'Star'}>
                     <IconButton size="small" onClick={handleStarClick} className="text-[#5f6368]">
                       {isStarred ? (
@@ -259,21 +246,21 @@ const EmailViewPage: React.FC = () => {
                       )}
                     </IconButton>
                   </Tooltip>
-
+ 
                   <Tooltip title="Reply">
                     <IconButton size="small" className="text-[#5f6368]">
                       <ReplyOutlined fontSize="small" />
                     </IconButton>
                   </Tooltip>
-
+ 
                   <IconButton size="small" className="text-[#5f6368]">
                     <MoreVertOutlined fontSize="small" />
                   </IconButton>
                 </Box>
               </Box>
-
+ 
               {/* Email Body Content */}
-              <Typography variant="body1" sx={{ color: '#202124', lineHeight: '1.6', whiteSpace: 'pre-line', fontSize: '14px', mt: 4, pr: 4 }}>
+              <Typography variant="body1" sx={{ color: '#202124', lineHeight: '1.6', whiteSpace: 'pre-line', fontSize: '14px', mt: 4, pr: { xs: 0, sm: 4 } }}>
                 {email.body}
               </Typography>
 

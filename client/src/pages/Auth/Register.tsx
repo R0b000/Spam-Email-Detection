@@ -112,15 +112,15 @@ const Register: React.FC = () => {
   };
 
   return (
-    <div className="relative z-10 w-full max-w-[1040px] overflow-hidden rounded-lg border border-gborder bg-white text-left">
+    <div className="relative z-10 w-full max-w-[1040px] overflow-hidden sm:rounded-lg sm:border sm:border-gborder bg-white text-left">
       <div className="grid min-h-[500px] grid-cols-1 md:grid-cols-2">
-        <div className="px-12 pb-9 pt-12">
+        <div className="px-6 sm:px-12 pb-9 pt-8 sm:pt-12">
           <img src={Logo} alt="Email logo" className="mb-3.5 h-[60px] w-[60px] object-contain text-left" />
           <h1 className="m-0 text-2xl font-normal">Create your Email Account</h1>
           <p className="mb-8 mt-2 text-base text-gsubtext">to continue to Email</p>
 
           <form onSubmit={handleSubmit} noValidate>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FloatInput type="text" id="firstName" label="First name" value={firstName} onChange={setFirstName} autoComplete="given-name" />
               <FloatInput type="text" id="lastName" label="Last name" value={lastName} onChange={setLastName} autoComplete="family-name" />
             </div>
@@ -144,7 +144,7 @@ const Register: React.FC = () => {
 
             <hr className="my-7 border-0 border-b border-gborder" />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FloatInput type="password" id="password" label="Password" value={password} onChange={setPassword} autoComplete="new-password" showToggle passwordVisible={passwordVisible} onToggle={() => setPasswordVisible((v) => !v)} />
               <FloatInput type="password" id="confirm" label="Confirm" value={confirm} onChange={setConfirm} autoComplete="new-password" showToggle passwordVisible={confirmVisible} onToggle={() => setConfirmVisible((v) => !v)} />
             </div>

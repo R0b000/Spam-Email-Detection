@@ -116,7 +116,9 @@ const iconRailItemSx = (active: boolean): SxProps => ({
 });
 
 const EmailLayout: React.FC = () => {
-  const [openDrawer, setOpenDrawer] = useState(true);
+  const [openDrawer, setOpenDrawer] = useState(() => {
+    return typeof window !== 'undefined' ? window.innerWidth >= 768 : true;
+  });
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedEmails, setSelectedEmails] = useState<string[]>([]);
   const [composeParams, setComposeParams] = useState<any>(null);
@@ -219,8 +221,8 @@ const EmailLayout: React.FC = () => {
     <>
       {/* ── Header ── */}
       <header className="fixed top-0 left-0 z-30 flex h-16 w-full bg-[#f6f8fc] border-b border-[#dadce0]/60">
-        {/* 6vw: Hamburger menu — aligns with icon rail below */}
-        <div className="w-[6vw] shrink-0 flex items-center justify-center">
+        {/* Hamburger menu — aligns with icon rail below */}
+        <div className="w-16 md:w-20 shrink-0 flex items-center justify-center">
           <IconButton
             size="small"
             onClick={toggleDrawer}
@@ -231,18 +233,18 @@ const EmailLayout: React.FC = () => {
           </IconButton>
         </div>
 
-        {/* 92vw: Logo + Search + Actions */}
-        <div className="flex-1 flex items-center py-2 px-4 gap-4">
-          {/* Logo — spans ~15vw to align with nav sidebar */}
-          <div className="w-[15vw] shrink-0 flex items-center gap-2">
-            <img src={Logo} alt='Email Logo' className="h-7 w-7" />
-            <span className="text-[22px] text-gsubtext font-normal tracking-tight">Email</span>
+        {/* Logo + Search + Actions */}
+        <div className="flex-1 flex items-center py-2 px-3 md:px-4 gap-2 md:gap-4">
+          {/* Logo — aligns with nav sidebar */}
+          <div className="w-16 sm:w-44 md:w-48 shrink-0 flex items-center gap-2">
+            <img src={Logo} alt='Email Logo' className="h-6 w-6 sm:h-7 sm:w-7" />
+            <span className="text-[20px] md:text-[22px] text-gsubtext font-normal tracking-tight hidden sm:inline">Email</span>
           </div>
 
           {/* Search bar */}
-          <div className="relative flex-1 max-w-2xl">
-            <div className="flex w-full items-center rounded-full bg-[#eaf1fb] px-4 py-1.5 transition-all focus-within:bg-white focus-within:shadow-sm border border-transparent focus-within:border-[#dadce0]">
-              <Search className="text-gsubtext mr-2" />
+          <div className="relative flex-1 max-w-2xl min-w-0">
+            <div className="flex w-full items-center rounded-full bg-[#eaf1fb] px-3 md:px-4 py-1 md:py-1.5 transition-all focus-within:bg-white focus-within:shadow-sm border border-transparent focus-within:border-[#dadce0]">
+              <Search className="text-gsubtext mr-1.5 md:mr-2" fontSize="small" />
               <input
                 type="text"
                 placeholder="Search mail"
@@ -256,7 +258,7 @@ const EmailLayout: React.FC = () => {
                 onFocus={() => {
                   if (searchQuery.trim().length > 0) setShowDropdown(true);
                 }}
-                className="w-full border-0 bg-transparent py-1 text-sm text-gtext outline-none placeholder-gsubtext"
+                className="w-full border-0 bg-transparent py-1 text-xs md:text-sm text-gtext outline-none placeholder-gsubtext"
               />
               {searchQuery && (
                 <IconButton
@@ -386,14 +388,14 @@ const EmailLayout: React.FC = () => {
           </div>
 
           {/* Right-side actions */}
-          <div className="flex items-center gap-1 ml-auto">
-            <IconButton size="small" aria-label="App launcher" className="text-gsubtext hover:bg-gray-200/60">
+          <div className="flex items-center gap-0.5 md:gap-1 ml-auto shrink-0">
+            <IconButton size="small" aria-label="App launcher" className="text-gsubtext hover:bg-gray-200/60 hidden md:inline-flex">
               <AppsOutlined />
             </IconButton>
-            <IconButton size="small" aria-label="Help" className="text-gsubtext hover:bg-gray-200/60">
+            <IconButton size="small" aria-label="Help" className="text-gsubtext hover:bg-gray-200/60 hidden sm:inline-flex">
               <HelpOutline />
             </IconButton>
-            <IconButton size="small" aria-label="Settings" className="text-gsubtext hover:bg-gray-200/60">
+            <IconButton size="small" aria-label="Settings" className="text-gsubtext hover:bg-gray-200/60 hidden sm:inline-flex">
               <SettingsOutlined />
             </IconButton>
             <IconButton size="small" aria-label="Notifications" className="text-gsubtext hover:bg-gray-200/60">
@@ -433,10 +435,10 @@ const EmailLayout: React.FC = () => {
       />
 
       {/* ── Body (below header) ── */}
-      <div className="flex" style={{ marginTop: 64, height: 'calc(100vh - 64px)' }}>
+      <div className="flex relative" style={{ marginTop: 64, height: 'calc(100vh - 64px)' }}>
 
-        {/* Icon Rail — 6vw */}
-        <aside className="w-[6vw] shrink-0 flex flex-col items-center pt-3 bg-[#f6f8fc] border-r border-[#dadce0]/30 overflow-y-auto">
+        {/* Icon Rail */}
+        <aside className="hidden md:flex w-16 md:w-20 shrink-0 flex-col items-center pt-3 bg-[#f6f8fc] border-r border-[#dadce0]/30 overflow-y-auto">
           <Box sx={iconRailItemSx(true)}>
             <MailOutlined sx={{ fontSize: 22 }} />
             <Typography sx={{ fontSize: '11px', fontWeight: 600, lineHeight: 1.2 }}>Mail</Typography>
@@ -451,10 +453,22 @@ const EmailLayout: React.FC = () => {
           </Box>
         </aside>
 
-        {/* Nav Sidebar — 15vw (collapsible) */}
+        {/* Mobile backdrop */}
+        {openDrawer && (
+          <div
+            onClick={() => setOpenDrawer(false)}
+            className="fixed inset-0 top-16 bg-black/20 z-30 md:hidden"
+          />
+        )}
+
+        {/* Nav Sidebar */}
         <nav
-          className="shrink-0 flex flex-col bg-[#f6f8fc] py-3 overflow-y-auto transition-all border-r border-[#dadce0]/20"
-          style={{ width: openDrawer ? '15vw' : '0px', opacity: openDrawer ? 1 : 0, overflow: openDrawer ? 'visible' : 'hidden' }}
+          className={`
+            shrink-0 flex flex-col bg-[#f6f8fc] py-3 overflow-y-auto transition-all duration-300
+            fixed md:relative top-16 md:top-0 left-0 h-[calc(100vh-64px)] md:h-auto z-40 md:z-10
+            border-r border-[#dadce0]/20 w-64 max-w-[80vw]
+            ${openDrawer ? 'translate-x-0 opacity-100' : '-translate-x-full md:translate-x-0 md:w-0 md:opacity-0 md:overflow-hidden'}
+          `}
         >
           <Button
             onClick={() => setOpenDialog(true)}
@@ -474,6 +488,12 @@ const EmailLayout: React.FC = () => {
                   to={`/emails/${item.name}`}
                   selected={selected}
                   sx={sidebarItemSx}
+                  onClick={() => {
+                    // Close drawer on navigation on mobile devices
+                    if (window.innerWidth < 768) {
+                      setOpenDrawer(false);
+                    }
+                  }}
                 >
                   <ListItemIcon
                     sx={{
@@ -512,6 +532,10 @@ const EmailLayout: React.FC = () => {
           <Suspense fallback={<Loader />}>
             <Outlet context={{ openDrawer, selectedEmails, setSelectedEmails, setOpenDialog, composeParams, setComposeParams, unreadCount, fetchUnreadCount }} />
           </Suspense>
+          {/* Disclaimer notice */}
+          <footer className="bg-yellow-50 border-t border-yellow-200 px-4 py-2 text-center text-[11px] text-yellow-800 flex-shrink-0 relative z-10">
+            <strong>Notice:</strong> This is a portfolio / test project and is not a real email service. Do not send sensitive personal information.
+          </footer>
         </main>
       </div>
 

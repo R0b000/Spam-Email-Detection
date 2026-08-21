@@ -186,17 +186,20 @@ const EmailSearchPage: React.FC = () => {
     <EmailPageLayout>
       <Box
         className="transition-all flex flex-col"
-        style={{
+        sx={{
           width: '100%',
-          padding: '12px 24px 24px 12px',
+          padding: { xs: '8px', sm: '12px 24px 24px 12px' },
           boxSizing: 'border-box',
           height: '100%',
           minHeight: 0,
         }}
       >
-        <Box className="bg-white rounded-2xl border border-[#dadce0]/60 shadow-sm overflow-hidden flex flex-col h-full">
+        <Box
+          className="bg-white border border-[#dadce0]/60 shadow-sm overflow-hidden flex flex-col h-full"
+          sx={{ borderRadius: { xs: '8px', sm: '16px' } }}
+        >
           {/* Toolbar */}
-          <Box className="flex items-center gap-[6px] border-b border-[#dadce0]/50 bg-white px-5 py-3">
+          <Box className="flex items-center gap-[6px] border-b border-[#dadce0]/50 bg-white" sx={{ px: { xs: 2, sm: 2.5 }, py: { xs: 1, sm: 1.5 } }}>
             <Checkbox
               size="small"
               checked={allSelected}

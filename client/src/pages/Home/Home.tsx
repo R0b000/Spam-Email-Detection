@@ -18,10 +18,10 @@ const Home: React.FC = () => {
   }
 
   return (
-    <div className="relative z-10 flex min-h-screen flex-col items-center justify-center bg-white px-6 text-center">
-      <img src={Logo} alt="Email logo" className="mx-auto mb-8 block h-24 w-24 object-contain" />
-      <h1 className="mb-3 text-4xl font-normal text-gtext">Welcome to Email</h1>
-      <p className="mx-auto mb-10 max-w-xl text-base text-gsubtext">
+    <div className="relative z-10 flex h-full w-full flex-col items-center justify-start md:justify-center overflow-y-auto bg-white px-6 py-12 text-center">
+      <img src={Logo} alt="Email logo" className="mx-auto mb-6 block h-20 w-20 sm:h-24 sm:w-24 object-contain" />
+      <h1 className="mb-3 text-3xl sm:text-4xl font-normal text-gtext">Welcome to Email</h1>
+      <p className="mx-auto mb-8 max-w-xl text-sm sm:text-base text-gsubtext">
         A fast, secure, and intelligent email experience. Manage your inbox, stay organized, and connect with confidence.
       </p>
 
@@ -55,9 +55,17 @@ const Home: React.FC = () => {
         />
       </div>
 
-      <div className="mt-10 flex gap-4">
-        <Link to="/auth/login" className="inline-flex h-11 items-center justify-center rounded bg-brand-blue px-6 text-sm font-semibold text-white hover:bg-brand-blue-dark">Sign in</Link>
-        <Link to="/auth/register" className="inline-flex h-11 items-center justify-center rounded border border-gborder px-6 text-sm font-semibold text-brand-blue hover:bg-blue-50">Create account</Link>
+      <div className="mt-10 flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto">
+        <Link to="/auth/login" className="inline-flex h-11 items-center justify-center rounded bg-brand-blue px-8 text-sm font-semibold text-white hover:bg-brand-blue-dark w-full sm:w-auto">Sign in</Link>
+        <Link to="/auth/register" className="inline-flex h-11 items-center justify-center rounded border border-gborder px-8 text-sm font-semibold text-brand-blue hover:bg-blue-50 w-full sm:w-auto">Create account</Link>
+      </div>
+
+      {/* Portfolio Disclaimer */}
+      <div className="mt-8 max-w-[500px] rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-center text-xs text-yellow-800 shadow-sm relative z-20 w-full">
+        <p className="font-semibold mb-1">⚠️ Disclaimer / Portfolio Project Notice</p>
+        <p>
+          This application is a simulated email interface built solely for portfolio demonstration and educational purposes (such as testing spam email classification models). It is not affiliated with Google, Gmail, or any other email provider. Please do not enter real credentials or sensitive personal information.
+        </p>
       </div>
     </div>
   );

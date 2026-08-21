@@ -389,13 +389,28 @@ const EmailLayout: React.FC = () => {
 
           {/* Right-side actions */}
           <div className="flex items-center gap-0.5 md:gap-1 ml-auto shrink-0">
-            <IconButton size="small" aria-label="App launcher" className="text-gsubtext hover:bg-gray-200/60 hidden md:inline-flex">
+            <IconButton
+              size="small"
+              aria-label="App launcher"
+              className="text-gsubtext hover:bg-gray-200/60"
+              sx={{ display: { xs: 'none', md: 'inline-flex' } }}
+            >
               <AppsOutlined />
             </IconButton>
-            <IconButton size="small" aria-label="Help" className="text-gsubtext hover:bg-gray-200/60 hidden sm:inline-flex">
+            <IconButton
+              size="small"
+              aria-label="Help"
+              className="text-gsubtext hover:bg-gray-200/60"
+              sx={{ display: { xs: 'none', sm: 'inline-flex' } }}
+            >
               <HelpOutline />
             </IconButton>
-            <IconButton size="small" aria-label="Settings" className="text-gsubtext hover:bg-gray-200/60 hidden sm:inline-flex">
+            <IconButton
+              size="small"
+              aria-label="Settings"
+              className="text-gsubtext hover:bg-gray-200/60"
+              sx={{ display: { xs: 'none', sm: 'inline-flex' } }}
+            >
               <SettingsOutlined />
             </IconButton>
             <IconButton size="small" aria-label="Notifications" className="text-gsubtext hover:bg-gray-200/60">

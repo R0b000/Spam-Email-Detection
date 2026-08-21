@@ -33,15 +33,17 @@ function Table<T>({ columns, rows, keyExtractor, onRowClick, getRowSx }: TablePr
               key={key}
               onClick={() => onRowClick?.(row)}
               sx={{
-                display: 'grid',
+                display: { xs: 'flex', md: 'grid' },
+                flexDirection: 'column',
                 gridTemplateColumns: 'repeat(18, 1fr)',
-                alignItems: 'center',
+                alignItems: { xs: 'stretch', md: 'center' },
                 cursor: onRowClick ? 'pointer' : 'default',
                 borderBottom: '1px solid #f1f3f4',
                 transition: 'all 0.15s ease',
                 backgroundColor: '#fff',
-                py: 1.25,
+                py: { xs: 1.5, md: 1.25 },
                 px: 2,
+                gap: { xs: 0.5, md: 0 },
                 '&:hover': {
                   backgroundColor: '#f7f9fa !important',
                   boxShadow: '0 1px 3px 0 rgba(60,64,67,0.08), 0 1px 3px 1px rgba(60,64,67,0.04)',
@@ -51,12 +53,33 @@ function Table<T>({ columns, rows, keyExtractor, onRowClick, getRowSx }: TablePr
                 ...(getRowSx ? (getRowSx(row) as any) : {}),
               }}
             >
+              {/* Mobile View */}
+              <Box sx={{ display: { xs: 'flex', md: 'none' }, flexDirection: 'column', width: '100%', minWidth: 0 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                  <Box sx={{ minWidth: 0, flex: 1, pr: 1 }}>
+                    {columns[1]?.render ? columns[1].render(row) : String(row[columns[1].id as keyof T] ?? '')}
+                  </Box>
+                  <Box sx={{ fontSize: '0.75rem', color: '#5f6368', flexShrink: 0, ml: 1 }}>
+                    {columns[3]?.render ? columns[3].render(row) : String(row[columns[3].id as keyof T] ?? '')}
+                  </Box>
+                </Box>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', mt: 0.5, minWidth: 0 }}>
+                  <Box sx={{ flex: 1, minWidth: 0, pr: 1 }}>
+                    {columns[2]?.render ? columns[2].render(row) : String(row[columns[2].id as keyof T] ?? '')}
+                  </Box>
+                  <Box sx={{ flexShrink: 0 }}>
+                    {columns[0]?.render ? columns[0].render(row) : String(row[columns[0].id as keyof T] ?? '')}
+                  </Box>
+                </Box>
+              </Box>
+
+              {/* Desktop View */}
               {columns.map((col) => (
                 <Box
                   key={String(col.id)}
                   sx={{
+                    display: { xs: 'none', md: 'flex' },
                     gridColumn: col.gridSpan ? `span ${col.gridSpan}` : 'auto',
-                    display: 'flex',
                     alignItems: 'center',
                     justifyContent: col.align === 'right' ? 'flex-end' : col.align === 'center' ? 'center' : 'flex-start',
                     fontSize: '0.875rem',

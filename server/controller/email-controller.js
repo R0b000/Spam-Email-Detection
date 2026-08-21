@@ -3,6 +3,15 @@ const MessageModel = require("../models/Message.js");
 const mongoose = require('mongoose');
 const runPythonScript = require('./spam.js');
 
+// Helper function to format email display names and addresses for frontend
+const formatEmailForDisplay = (emailObj, userEmail) => {
+    const isSent = emailObj.senderEmail === userEmail;
+    emailObj.senderDisplay = emailObj.senderName || 'Unknown Sender';
+    emailObj.senderEmailDisplay = emailObj.senderEmail || '';
+    emailObj.receiverDisplay = isSent ? (emailObj.receiverEmail || '') : 'me';
+    return emailObj;
+};
+
 const emailController = {
     login: async (req, res) => {
         const { email, password } = req.body;
@@ -434,7 +443,9 @@ const emailController = {
                         receiverEmail = receiver ? receiver.email : '';
                     }
                 } 
-                return { ...message.toObject(), receiverEmail, senderEmail: sender ? sender.email : '', senderName, receiverName };
+                const senderEmail = sender ? sender.email : '';
+                const emailObj = { ...message.toObject(), receiverEmail, senderEmail, senderName, receiverName };
+                return formatEmailForDisplay(emailObj, userEmail);
             }));
     
             response.status(200).json({ message: 'Messages retrieved successfully', data: messagesWithEmails });
@@ -681,7 +692,9 @@ const emailController = {
                 } else {
                     receiverEmail = receiver ? receiver.email : '';
                 }
-                return { ...message.toObject(), receiverEmail, senderEmail: sender ? sender.email : '', senderName, receiverName };
+                const senderEmail = sender ? sender.email : '';
+                const emailObj = { ...message.toObject(), receiverEmail, senderEmail, senderName, receiverName };
+                return formatEmailForDisplay(emailObj, userEmail);
             }));
 
             response.status(200).json({ data: mappedMessages });

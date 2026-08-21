@@ -30,10 +30,18 @@ const AuthLayout: React.FC = () => {
           transform: rotate(25deg);
         }
       `}</style>
-      <div className="gauth-bg flex flex-col items-center">
+      <div className="gauth-bg flex flex-col items-center px-4 w-full max-w-[500px]">
         <Suspense fallback={<Loader />}>
           <Outlet />
         </Suspense>
+        
+        {/* Portfolio Disclaimer */}
+        <div className="mt-8 rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-center text-xs text-yellow-800 shadow-sm relative z-20 w-full">
+          <p className="font-semibold mb-1">⚠️ Disclaimer / Portfolio Project Notice</p>
+          <p>
+            This application is a simulated email interface built solely for portfolio demonstration and educational purposes (such as testing spam email classification models). It is not affiliated with Google, Gmail, or any other email provider. Please do not enter real credentials or sensitive personal information.
+          </p>
+        </div>
       </div>
     </div>
   );

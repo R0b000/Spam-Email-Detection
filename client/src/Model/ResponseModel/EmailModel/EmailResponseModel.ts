@@ -28,6 +28,9 @@ export interface Mail {
   name?: string;
   senderName?: string;
   receiverName?: string;
+  senderDisplay?: string;
+  senderEmailDisplay?: string;
+  receiverDisplay?: string;
 }
 
 export interface SendEmailResponse {
